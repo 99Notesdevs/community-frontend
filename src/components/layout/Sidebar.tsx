@@ -1,7 +1,31 @@
 import { Home, TrendingUp, Search, MessageSquare, Users, Plus, Hash } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { useEffect, useState } from 'react';
+import { CreateCommunityModal } from '../community/CreateCommunityModal';
+import { api } from '@/api/route';
 
+interface COmmunityResponse{
+  id: number,
+  userId: number,
+  communityId: number,
+  role: string,
+  joinedAt: Date,
+  community: Community
+}
+interface Community{
+  id: number,
+  name: string,
+  displayName: string,
+  description: string,
+  iconUrl: string,
+  bannerUrl: string,
+  type: string,
+  nsfw: false,
+  createdAt: Date,
+  updatedAt: Date,
+  ownerId: number
+}
 interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
@@ -9,7 +33,8 @@ interface SidebarProps {
 
 const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
   const location = useLocation();
-
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [communities, setCommunities] = useState<Community[]>([]);
   const navItems = [
     { name: 'Home', href: '/', icon: Home },
     { name: 'Trending', href: '/trending', icon: TrendingUp },
@@ -18,16 +43,40 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
     { name: 'Communities', href: '/communities', icon: Users },
   ];
 
-  const joinedCommunities = [
-    { name: 'r/technology', members: '2.1M', icon: '💻' },
-    { name: 'r/programming', members: '1.8M', icon: '👨‍💻' },
-    { name: 'r/webdev', members: '890K', icon: '🌐' },
-    { name: 'r/reactjs', members: '650K', icon: '⚛️' },
-    { name: 'r/javascript', members: '1.2M', icon: '📜' },
-  ];
+  useEffect(() => {
+    const fetchCommunities = async () => {
+      try {
+        console.log("Fetching communities...");
+        const response = await api.get<{ success: boolean; data: COmmunityResponse[] }>('/communities/me');
+        console.log("API Response:", response.data);
+        
+        if (response.success) {
+          // Assuming the communities are in response.data.data
+          setCommunities(response.data.map((community) => community.community));
+        }
+      } catch (error) {
+        console.error("Error fetching communities:", error);
+      }
+    };
+  
+    fetchCommunities();
+  }, []);
+  // const joinedCommunities = [
+  //   { name: 'r/technology', members: '2.1M', icon: '💻' },
+  //   { name: 'r/programming', members: '1.8M', icon: '👨\u200d💻' },
+  //   { name: 'r/webdev', members: '890K', icon: '🌐' },
+  //   { name: 'r/reactjs', members: '650K', icon: '⚛️' },
+  //   { name: 'r/javascript', members: '1.2M', icon: '📜' },
+  // ];
 
   return (
     <>
+      {/* Create Community Modal */}
+      <CreateCommunityModal 
+        isOpen={isCreateModalOpen} 
+        onClose={() => setIsCreateModalOpen(false)} 
+      />
+
       {/* Mobile backdrop */}
       {isOpen && (
         <div 
@@ -63,7 +112,13 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
 
           {/* Create Community */}
           <div className="pt-4 border-t border-border">
-            <button className="w-full flex items-center px-3 py-2 text-primary hover:bg-primary-light rounded-lg transition-smooth">
+            <button 
+              onClick={() => {
+                onClose();
+                setIsCreateModalOpen(true);
+              }}
+              className="w-full flex items-center px-3 py-2 text-primary hover:bg-primary-light rounded-lg transition-smooth"
+            >
               <Plus className="h-5 w-5 mr-3" />
               Create Community
             </button>
@@ -75,10 +130,10 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
               Your Communities
             </h3>
             <div className="space-y-1">
-              {joinedCommunities.map((community) => (
+              {communities.map((community) => (
                 <Link
                   key={community.name}
-                  to={`/r/${community.name.split('/')[1]}`}
+                  to={`/r/${community.id}`}
                   onClick={onClose}
                   className="flex items-center px-3 py-2 rounded-lg hover:bg-sidebar-hover transition-smooth group"
                 >

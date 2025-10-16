@@ -1,33 +1,95 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import PostCreationBar from '@/components/posts/PostCreationBar';
 import PostCard from '@/components/posts/PostCard';
-import { dummyPosts, dummyCommunities } from '@/data/dummyData';
-import { TrendingUp, Users, Star } from 'lucide-react';
+import { TrendingUp, Star } from 'lucide-react';
+import { api } from '@/api/route';
+
+interface Post {
+  id: string;
+  title: string;
+  content: string;
+  author: string;
+  community: string;
+  communityIcon: string;
+  createdAt: Date;
+  votesCount: number;
+  commentsCount: number;
+  imageUrl?: string;
+  link?: string;
+  isBookmarked?: boolean;
+  [key: string]: any; // for other properties we might not use directly
+}
+
 
 const Homepage = () => {
   const [sortBy, setSortBy] = useState<'hot' | 'new' | 'top'>('hot');
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const sortedPosts = [...dummyPosts].sort((a, b) => {
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        setLoading(true);
+        const response = await api.get<{ success: boolean; data: Post[] }>(`/posts`);
+        if (response.success) {
+          // Map the API response to match the Post interface expected by PostCard
+          const formattedPosts = response.data.map((post: any) => ({
+            ...post,
+            votes: post.votesCount, // Map votesCount to votes
+            comments: post.commentsCount, // Map commentsCount to comments
+            author: post.authorId?.toString() || 'Anonymous', // Ensure author is a string
+            community: 'Community', // Default community name
+            communityIcon: '👥', // Default community icon
+            createdAt: new Date(post.createdAt) // Ensure createdAt is a Date object
+          }));
+          setPosts(formattedPosts);
+        } else {
+          setError('Failed to fetch posts');
+        }
+      } catch (err) {
+        setError('An error occurred while fetching posts');
+        console.error('Error fetching posts:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPosts();
+  }, []);
+
+  const sortedPosts = [...posts].sort((a, b) => {
+    const dateA = new Date(a.createdAt).getTime();
+    const dateB = new Date(b.createdAt).getTime();
+    
     switch (sortBy) {
       case 'new':
-        return b.createdAt.getTime() - a.createdAt.getTime();
+        return dateB - dateA;
       case 'top':
-        return b.votes - a.votes;
+        return b.votesCount - a.votesCount;
       case 'hot':
       default:
         // Simple hot algorithm: combine votes and recency
-        const aScore = a.votes / Math.pow((Date.now() - a.createdAt.getTime()) / (1000 * 60 * 60) + 2, 1.8);
-        const bScore = b.votes / Math.pow((Date.now() - b.createdAt.getTime()) / (1000 * 60 * 60) + 2, 1.8);
+        const hoursSinceA = (Date.now() - dateA) / (1000 * 60 * 60);
+        const hoursSinceB = (Date.now() - dateB) / (1000 * 60 * 60);
+        const aScore = a.votesCount / Math.pow(hoursSinceA + 2, 1.8);
+        const bScore = b.votesCount / Math.pow(hoursSinceB + 2, 1.8);
         return bScore - aScore;
     }
   });
 
+  if (loading) {
+    return <div className="max-w-4xl mx-auto px-4 py-6">Loading posts...</div>;
+  }
+
+  if (error) {
+    return <div className="max-w-4xl mx-auto px-4 py-6 text-red-500">{error}</div>;
+  }
+
   return (
     <div className="max-w-4xl mx-auto px-4 py-6">
-      {/* Post Creation Bar */}
       <PostCreationBar />
 
-      {/* Sort Controls */}
       <div className="flex items-center space-x-4 mb-6">
         <button
           onClick={() => setSortBy('hot')}
@@ -60,18 +122,16 @@ const Homepage = () => {
         </button>
       </div>
 
-      {/* Posts Feed */}
       <div className="space-y-4">
-        {sortedPosts.map((post) => (
-          <PostCard key={post.id} post={post} />
-        ))}
-      </div>
-
-      {/* Load More */}
-      <div className="text-center mt-8">
-        <button className="btn-secondary">
-          Load More Posts
-        </button>
+        {sortedPosts.length > 0 ? (
+          sortedPosts.map((post) => (
+            <PostCard key={post.id} post={post} />
+          ))
+        ) : (
+          <div className="text-center py-8 text-muted-foreground">
+            No posts found. Be the first to create one!
+          </div>
+        )}
       </div>
     </div>
   );

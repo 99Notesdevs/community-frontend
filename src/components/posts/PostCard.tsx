@@ -1,5 +1,12 @@
 import { useState } from 'react';
-import { MessageCircle, Share, Bookmark, MoreHorizontal, ExternalLink } from 'lucide-react';
+import { MessageCircle, Share, Bookmark, MoreHorizontal, ExternalLink, MessageSquare, User } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import VotingSystem from './VotingSystem';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -8,6 +15,7 @@ interface Post {
   title: string;
   content: string;
   author: string;
+  authorId: string;
   community: string;
   communityIcon: string;
   createdAt: Date;
@@ -22,9 +30,10 @@ interface PostCardProps {
   post: Post;
 }
 
-const PostCard = ({ post }: PostCardProps) => {
+export const PostCard: React.FC<PostCardProps> = ({ post }) => {
   const [isBookmarked, setIsBookmarked] = useState(post.isBookmarked || false);
   const [showFullContent, setShowFullContent] = useState(false);
+  const navigate = useNavigate();
 
   const handleShare = () => {
     navigator.clipboard.writeText(`${window.location.origin}/post/${post.id}`);
@@ -35,6 +44,21 @@ const PostCard = ({ post }: PostCardProps) => {
   const handleBookmark = () => {
     setIsBookmarked(!isBookmarked);
     console.log('Bookmarked:', !isBookmarked);
+  };
+
+  const handleMessageUser = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigate(`/messages?userId=${post.authorId}`);
+  };
+
+  const handleViewProfile = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigate(`/user/${post.authorId}`);
+  };
+
+  const handleCommentClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigate(`/post/${post.id}`);
   };
 
   const truncatedContent = post.content.length > 300 
@@ -61,7 +85,26 @@ const PostCard = ({ post }: PostCardProps) => {
             <span className="text-lg">{post.communityIcon}</span>
             <span className="font-medium text-foreground">{post.community}</span>
             <span>•</span>
-            <span>Posted by u/{post.author}</span>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <span 
+                  className="hover:underline cursor-pointer hover:text-foreground"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  Posted by u/{post.author}
+                </span>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-48">
+                <DropdownMenuItem onClick={handleViewProfile}>
+                  <User className="mr-2 h-4 w-4" />
+                  <span>View Profile</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleMessageUser}>
+                  <MessageSquare className="mr-2 h-4 w-4" />
+                  <span>Message</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <span>•</span>
             <span>{formatDistanceToNow(post.createdAt, { addSuffix: true })}</span>
           </div>
@@ -114,9 +157,12 @@ const PostCard = ({ post }: PostCardProps) => {
 
           {/* Actions */}
           <div className="flex items-center space-x-4">
-            <button className="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-muted transition-smooth text-muted-foreground hover:text-foreground">
+            <button 
+              className="flex items-center space-x-1 hover:bg-secondary px-2 py-1 rounded-md"
+              onClick={handleCommentClick}
+            >
               <MessageCircle className="h-4 w-4" />
-              <span className="text-sm font-medium">{post.comments}</span>
+              <span>{post.comments} Comments</span>
             </button>
 
             <button 

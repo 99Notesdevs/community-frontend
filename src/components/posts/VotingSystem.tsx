@@ -1,44 +1,69 @@
 import { useState } from 'react';
 import { ChevronUp, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { api } from '@/api/route';
 
 interface VotingSystemProps {
   initialVotes: number;
-  postId: string;
+  postId?: string;
+  commentId?: number;
   orientation?: 'vertical' | 'horizontal';
   size?: 'sm' | 'md' | 'lg';
+  onVote?: (newVote: 'up' | 'down' | null) => void;
 }
 
 const VotingSystem = ({ 
   initialVotes, 
-  postId, 
+  postId,
+  commentId,
   orientation = 'vertical',
-  size = 'md' 
+  size = 'md',
+  onVote
 }: VotingSystemProps) => {
   const [votes, setVotes] = useState(initialVotes);
   const [userVote, setUserVote] = useState<'up' | 'down' | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleVote = (type: 'up' | 'down') => {
-    let newVotes = votes;
-    let newUserVote: 'up' | 'down' | null = type;
-
-    if (userVote === type) {
-      // Remove vote
-      newUserVote = null;
-      newVotes = type === 'up' ? votes - 1 : votes + 1;
-    } else if (userVote) {
-      // Change vote
-      newVotes = type === 'up' ? votes + 2 : votes - 2;
-    } else {
-      // New vote
-      newVotes = type === 'up' ? votes + 1 : votes - 1;
-    }
-
-    setVotes(newVotes);
-    setUserVote(newUserVote);
+  const handleVote = async (type: 'up' | 'down') => {
+    if (isLoading) return;
     
-    // Dummy API call
-    console.log('Voting:', { postId, type: newUserVote, votes: newVotes });
+    setIsLoading(true);
+    
+    try {
+      const newVote = userVote === type ? null : type;
+      const voteType = newVote === 'up' ? 'UPVOTE' : 'DOWNVOTE';
+      
+      // Determine the API endpoint based on whether it's a post or comment
+      const endpoint = commentId 
+        ? `/comments/${commentId}/vote`
+        : `/posts/${postId}/vote`;
+      
+      const response = await api.post(endpoint, { voteType });
+      
+      if (response.success) {
+        // Update local state
+        let newVotes = votes;
+        
+        if (userVote === type) {
+          // Remove vote
+          newVotes = type === 'up' ? votes - 1 : votes + 1;
+        } else if (userVote) {
+          // Change vote
+          newVotes = type === 'up' ? votes + 2 : votes - 2;
+        } else {
+          // New vote
+          newVotes = type === 'up' ? votes + 1 : votes - 1;
+        }
+        
+        setVotes(newVotes);
+        setUserVote(newVote);
+        onVote?.(newVote);
+      }
+    } catch (error) {
+      console.error('Error submitting vote:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const formatVotes = (count: number) => {
@@ -70,17 +95,19 @@ const VotingSystem = ({
     )}>
       <button
         onClick={() => handleVote('up')}
+        disabled={isLoading}
         className={cn(
-          "vote-button",
+          "vote-button hover:text-vote-upvote transition-colors disabled:opacity-50",
           sizeClasses[size],
-          userVote === 'up' && "upvote-active"
+          userVote === 'up' ? "text-vote-upvote" : "text-muted-foreground"
         )}
+        aria-label="Upvote"
       >
         <ChevronUp className={iconSizeClasses[size]} />
       </button>
       
       <span className={cn(
-        "font-bold transition-smooth",
+        "font-bold transition-smooth select-none",
         votes > 0 ? "text-vote-upvote" : votes < 0 ? "text-vote-downvote" : "text-muted-foreground",
         size === 'sm' ? "text-xs" : size === 'md' ? "text-sm" : "text-base"
       )}>
@@ -89,11 +116,13 @@ const VotingSystem = ({
       
       <button
         onClick={() => handleVote('down')}
+        disabled={isLoading}
         className={cn(
-          "vote-button",
+          "vote-button hover:text-vote-downvote transition-colors disabled:opacity-50",
           sizeClasses[size],
-          userVote === 'down' && "downvote-active"
+          userVote === 'down' ? "text-vote-downvote" : "text-muted-foreground"
         )}
+        aria-label="Downvote"
       >
         <ChevronDown className={iconSizeClasses[size]} />
       </button>
