@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import VotingSystem from './VotingSystem';
 import { formatDistanceToNow } from 'date-fns';
+import { api } from '@/api/route';
 
 interface Post {
   id: string;
@@ -19,8 +20,8 @@ interface Post {
   community: string;
   communityIcon: string;
   createdAt: Date;
-  votes: number;
-  comments: number;
+  votesCount: number;
+  commentsCount: number;
   imageUrl?: string;
   link?: string;
   isBookmarked?: boolean;
@@ -43,7 +44,7 @@ export const PostCard: React.FC<PostCardProps> = ({ post }) => {
 
   const handleBookmark = () => {
     setIsBookmarked(!isBookmarked);
-    console.log('Bookmarked:', !isBookmarked);
+    api.post(`/bookmark/${post.id}/bookmark`);
   };
 
   const handleMessageUser = (e: React.MouseEvent) => {
@@ -53,7 +54,7 @@ export const PostCard: React.FC<PostCardProps> = ({ post }) => {
 
   const handleViewProfile = (e: React.MouseEvent) => {
     e.stopPropagation();
-    navigate(`/user/${post.authorId}`);
+    navigate(`/u/${post.authorId}`);
   };
 
   const handleCommentClick = (e: React.MouseEvent) => {
@@ -71,7 +72,7 @@ export const PostCard: React.FC<PostCardProps> = ({ post }) => {
         {/* Voting System */}
         <div className="flex-shrink-0">
           <VotingSystem 
-            initialVotes={post.votes} 
+            initialVotes={post.votesCount} 
             postId={post.id}
             orientation="vertical"
             size="md"
@@ -162,7 +163,7 @@ export const PostCard: React.FC<PostCardProps> = ({ post }) => {
               onClick={handleCommentClick}
             >
               <MessageCircle className="h-4 w-4" />
-              <span>{post.comments} Comments</span>
+              <span>{post.commentsCount} Comments</span>
             </button>
 
             <button 
