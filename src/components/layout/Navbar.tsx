@@ -58,14 +58,14 @@ const Navbar = ({ onToggleSidebar, isSidebarOpen }: NavbarProps) => {
           <Link to="/messages" className="p-2 rounded-lg hover:bg-muted transition-smooth relative">
             <MessageSquare className="h-5 w-5" />
             <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs rounded-full w-5 h-5 flex items-center justify-center">
-              3
+              0
             </span>
           </Link>
           
           <button className="p-2 rounded-lg hover:bg-muted transition-smooth relative">
             <Bell className="h-5 w-5" />
             <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs rounded-full w-5 h-5 flex items-center justify-center">
-              5
+              0
             </span>
           </button>
           
@@ -100,13 +100,6 @@ const Navbar = ({ onToggleSidebar, isSidebarOpen }: NavbarProps) => {
                     className="block px-4 py-2 text-sm text-[var(--text-primary)] hover:bg-[var(--bg-light-secondary)]"
                   >
                     Your Profile
-                  </Link>
-                  <div className="border-t border-[var(--border-light)] my-1"></div>
-                  <Link
-                    to="/myorders"
-                    className="block px-4 py-2 text-sm text-[var(--text-primary)] hover:bg-[var(--bg-light-secondary)]"
-                  >
-                    My Orders
                   </Link>
                   <div className="border-t border-[var(--border-light)] my-1"></div>
                   <Link

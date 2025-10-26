@@ -18,6 +18,7 @@ import MessagesPage from './pages/MessagesPage';
 import CommunityPage from './pages/CommunityPage';
 import UserPage from './pages/UserPage';
 import CommentsPage from './pages/CommentsPage';
+import UserProfile from './pages/UserProfile';
 
 const App = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -50,6 +51,7 @@ const App = () => {
                     <Route path="/u/:id" element={<UserPage />} />
                     <Route path="/messages" element={<MessagesPage />} />
                     <Route path="/post/:postId" element={<CommentsPage />} />
+                    <Route path="/profile" element={<UserProfile />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </main>

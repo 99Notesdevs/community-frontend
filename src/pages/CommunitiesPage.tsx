@@ -8,21 +8,20 @@ import { Input } from '@/components/ui/input';
 interface Community {
   id: number;
   name: string;
-  displayName: string;
   description: string;
+  type: 'PUBLIC' | 'PRIVATE' | 'RESTRICTED';
   iconUrl: string;
   bannerUrl: string;
-  type: 'PUBLIC' | 'PRIVATE' | 'RESTRICTED';
   nsfw: boolean;
   createdAt: string;
   updatedAt: string;
   ownerId: number;
   membersCount?: number;
-  isJoined?: boolean;
 }
 
 const CommunitiesPage = () => {
   const [communities, setCommunities] = useState<Community[]>([]);
+  const [joinedCommunityIds, setJoinedCommunityIds] = useState<number[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -31,73 +30,70 @@ const CommunitiesPage = () => {
   const itemsPerPage = 12;
 
   useEffect(() => {
-    const fetchCommunities = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
-        setError(null);
-        const response = await api.get<{ success: boolean; data: Community[] }>(
-          `/communities?page=${currentPage}&limit=${itemsPerPage}&search=${encodeURIComponent(searchQuery)}`
-        );
         
-        if (response.success && response.data) {
-          // Map the API response to include default values for missing fields
-          const formattedCommunities = response.data.map((community: any) => ({
-            ...community,
-            membersCount: community.membersCount || 0,
-            isJoined: community.isJoined || false,
-            iconUrl: community.iconUrl || '',
-            bannerUrl: community.bannerUrl || '',
-          }));
-          
-          setCommunities(formattedCommunities);
-          // If the API doesn't return total count, we'll handle pagination based on the array length
-          const totalItems = response.data.length;
-          setTotalPages(Math.ceil(totalItems / itemsPerPage));
-        } else {
-          throw new Error('Failed to fetch communities');
-        }
-      } catch (error) {
-        console.error('Failed to fetch communities:', error);
-        setError('Failed to load communities. Please try again later.');
+        // Fetch all communities
+        const [communitiesRes, joinedRes] = await Promise.all([
+          api.get<{ data: Community[] }>('/communities'),
+          api.get<{ data: { community: Community }[] }>('/communities/me')
+        ]);
+        
+        setCommunities(communitiesRes.data);
+        setJoinedCommunityIds(joinedRes.data.map(c => c.community.id));
+      } catch (err) {
+        setError('Failed to fetch communities');
+        console.error('Error fetching communities:', err);
       } finally {
         setLoading(false);
       }
     };
 
-    const debounceTimer = setTimeout(fetchCommunities, 300);
-    return () => clearTimeout(debounceTimer);
-  }, [currentPage, searchQuery]);
+    fetchData();
+  }, []);
 
   const handleJoinCommunity = async (communityId: number) => {
     try {
-      const communityIndex = communities.findIndex(c => c.id === communityId);
-      if (communityIndex === -1) return;
+      const isCurrentlyJoined = joinedCommunityIds.includes(communityId);
 
-      const updatedCommunities = [...communities];
-      const wasJoined = updatedCommunities[communityIndex].isJoined;
-      
       // Optimistic update
-      updatedCommunities[communityIndex] = {
-        ...updatedCommunities[communityIndex],
-        isJoined: !wasJoined,
-        membersCount: wasJoined 
-          ? (updatedCommunities[communityIndex].membersCount || 1) - 1 
-          : (updatedCommunities[communityIndex].membersCount || 0) + 1
-      };
-      setCommunities(updatedCommunities);
+      setJoinedCommunityIds(prev => 
+        isCurrentlyJoined 
+          ? prev.filter(id => id !== communityId)
+          : [...prev, communityId]
+      );
+
+      // Update members count optimistically
+      setCommunities(communities.map(c => 
+        c.id === communityId 
+          ? { ...c, membersCount: (c.membersCount || 0) + (isCurrentlyJoined ? -1 : 1) }
+          : c
+      ));
 
       // API call
-      const response = wasJoined 
+      const response = isCurrentlyJoined
         ? await api.post<{ success: boolean }>(`/communities/${communityId}/leave`)
         : await api.post<{ success: boolean }>(`/communities/${communityId}/join`);
 
       if (!response.success) {
-        throw new Error(`Failed to ${wasJoined ? 'leave' : 'join'} community`);
+        throw new Error(`Failed to ${isCurrentlyJoined ? 'leave' : 'join'} community`);
       }
-    } catch (error) {
-      console.error('Failed to update community join status:', error);
+    } catch (err) {
       // Revert on error
-      setCommunities(prev => prev.map(c => c.id === communityId ? { ...c, isJoined: !c.isJoined } : c));
+      const isCurrentlyJoined = joinedCommunityIds.includes(communityId);
+      setJoinedCommunityIds(prev => 
+        isCurrentlyJoined 
+          ? prev.filter(id => id !== communityId)
+          : [...prev, communityId]
+      );
+      setCommunities(communities.map(c => 
+        c.id === communityId 
+          ? { ...c, membersCount: (c.membersCount || 0) + (isCurrentlyJoined ? 1 : -1) }
+          : c
+      ));
+      setError(`Failed to ${joinedCommunityIds.includes(communityId) ? 'leave' : 'join'} community`);
+      console.error('Error updating community membership:', err);
     }
   };
 
@@ -114,12 +110,6 @@ const CommunitiesPage = () => {
     <div className="max-w-7xl mx-auto px-4 py-8">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <h1 className="text-3xl font-bold">Communities</h1>
-        <Button asChild>
-          <Link to="/communities/create" className="flex items-center gap-2">
-            <Plus className="h-4 w-4" />
-            Create Community
-          </Link>
-        </Button>
       </div>
 
       <div className="mb-6">
@@ -160,7 +150,7 @@ const CommunitiesPage = () => {
                     {community.iconUrl ? (
                       <img 
                         src={community.iconUrl} 
-                        alt={community.displayName}
+                        alt={community.name}
                         className="h-full w-full object-cover"
                       />
                     ) : (
@@ -169,14 +159,16 @@ const CommunitiesPage = () => {
                       </div>
                     )}
                   </div>
-                  <Button 
-                    variant={community.isJoined ? 'outline' : 'default'}
-                    size="sm"
+                  <button
                     onClick={() => handleJoinCommunity(community.id)}
-                    className="shrink-0"
+                    className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                      joinedCommunityIds.includes(community.id)
+                        ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        : 'bg-blue-500 text-white hover:bg-blue-600'
+                    }`}
                   >
-                    {community.isJoined ? 'Joined' : 'Join'}
-                  </Button>
+                    {joinedCommunityIds.includes(community.id) ? 'Leave' : 'Join'}
+                  </button>
                 </div>
                 <Link to={`/r/${community.id}`} className="font-medium hover:underline block mb-1">
                   r/{community.name}
