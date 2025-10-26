@@ -6,6 +6,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { compressFile, uploadImageToS3 } from '@/config/imageUploadS3';
 
 type PostType = 'TEXT' | 'IMAGE' | 'LINK' | 'POLL';
 
@@ -54,6 +55,8 @@ const PostCreationBar = () => {
   // Handle form submission
   const handleSubmit = async () => {
     if (!selectedCommunity || !title.trim()) return;
+    // Get the user id here to structure the storage in aws.
+    const userId = localStorage.getItem('id');
     
     // Create base payload with common fields
     const payload: {
@@ -79,9 +82,16 @@ const PostCreationBar = () => {
     if (postType === 'LINK') {
       payload.url = url;
     } else if (postType === 'IMAGE' && imageFile) {
-      // In a real app, you would upload the image first and get the URL
-      // For now, we'll just use a placeholder
-      payload.imageUrl = URL.createObjectURL(imageFile);
+      /**
+       * Use compressFile function from src/config/imageUploadS3.ts
+       * Returns a File type that should be appended in a formData sent to aws for uploading
+       */
+      const newFile = await compressFile(imageFile);
+      const formData = new FormData();
+      formData.append("imageUrl", newFile);
+      const upload = await uploadImageToS3(formData, `user-${userId}/iamges`, `user: ${userId}--valid-name-here`);
+
+      payload.imageUrl = upload;
     } else if (postType === 'POLL') {
       payload.pollOptions = pollOptions.filter(opt => opt.text.trim());
     }
