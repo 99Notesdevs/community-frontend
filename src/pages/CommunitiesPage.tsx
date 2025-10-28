@@ -16,7 +16,6 @@ interface Community {
   createdAt: string;
   updatedAt: string;
   ownerId: number;
-  membersCount?: number;
 }
 
 const CommunitiesPage = () => {
@@ -64,13 +63,6 @@ const CommunitiesPage = () => {
           : [...prev, communityId]
       );
 
-      // Update members count optimistically
-      setCommunities(communities.map(c => 
-        c.id === communityId 
-          ? { ...c, membersCount: (c.membersCount || 0) + (isCurrentlyJoined ? -1 : 1) }
-          : c
-      ));
-
       // API call
       const response = isCurrentlyJoined
         ? await api.post<{ success: boolean }>(`/communities/${communityId}/leave`)
@@ -87,11 +79,6 @@ const CommunitiesPage = () => {
           ? prev.filter(id => id !== communityId)
           : [...prev, communityId]
       );
-      setCommunities(communities.map(c => 
-        c.id === communityId 
-          ? { ...c, membersCount: (c.membersCount || 0) + (isCurrentlyJoined ? 1 : -1) }
-          : c
-      ));
       setError(`Failed to ${joinedCommunityIds.includes(communityId) ? 'leave' : 'join'} community`);
       console.error('Error updating community membership:', err);
     }
@@ -173,13 +160,9 @@ const CommunitiesPage = () => {
                 <Link to={`/r/${community.id}`} className="font-medium hover:underline block mb-1">
                   r/{community.name}
                 </Link>
-                <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+                <p className="text-sm text-muted-foreground mb-3 line-clamp-1">
                   {community.description || 'No description'}
                 </p>
-                <div className="flex items-center text-sm text-muted-foreground">
-                  <Users className="h-4 w-4 mr-1" />
-                  {community.membersCount?.toLocaleString() || 0} members
-                </div>
                 {community.nsfw && (
                   <span className="inline-block mt-2 text-xs bg-red-100 text-red-800 px-2 py-0.5 rounded">
                     NSFW

@@ -31,8 +31,8 @@ interface Post {
   community: string;
   communityIcon: string;
   createdAt: string;
-  votes: number;
-  comments: number;
+  votesCount: number;
+  commentsCount: number;
   imageUrl?: string;
   link?: string;
 }
@@ -53,7 +53,7 @@ const CommentsPage: React.FC = () => {
       setIsLoading(true);
       
       // Fetch post
-      const postResponse = await api.get(`/posts/${postId}`);
+      const postResponse = await api.get<{ success: boolean; data: Post }>(`/posts/${postId}`);
       console.log('Post response:', postResponse);
       
       if (!postResponse.success) {
@@ -61,12 +61,12 @@ const CommentsPage: React.FC = () => {
       }
       
       // Make sure we have the data in the expected format
-      const postData = postResponse.data?.data || postResponse.data;
+      const postData = postResponse.data || postResponse.data;
       console.log('Post data:', postData);
       setPost(postData);
 
       // Fetch comments
-      const commentsResponse = await api.get(`/comments/post/${postId}`);
+      const commentsResponse = await api.get<{ success: boolean; data: Comment[] }>(`/comments/post/${postId}`);
       console.log('Comments response:', commentsResponse);
       
       if (!commentsResponse.success) {
@@ -74,7 +74,7 @@ const CommentsPage: React.FC = () => {
       }
       
       // Handle both response.data.data and response.data formats
-      let commentsData = commentsResponse.data?.data || commentsResponse.data;
+      let commentsData = commentsResponse.data || commentsResponse.data;
       
       // Ensure we have an array
       if (!Array.isArray(commentsData)) {
@@ -131,7 +131,7 @@ const CommentsPage: React.FC = () => {
     try {
       const response = await api.post<{
         success: boolean;
-        data: Comment & { author: string };
+        data: Comment;
       }>('/comments', {
         content: newComment,
         postId: Number(postId),
@@ -143,7 +143,6 @@ const CommentsPage: React.FC = () => {
           ...response.data,
           replies: [],
           votesCount: 0,
-          author: user.username // Assuming user object has username
         };
 
         if (replyingTo) {
@@ -177,7 +176,8 @@ const CommentsPage: React.FC = () => {
         if (post) {
           setPost({
             ...post,
-            comments: post.comments + 1
+            commentsCount: post.commentsCount + 1,
+            
           });
         }
 
