@@ -8,11 +8,12 @@ interface Post {
   title: string;
   content: string;
   author: string;
+  authorId: string;
   community: string;
   communityIcon: string;
   createdAt: Date;
-  votes: number;
-  comments: number;
+  votesCount: number;
+  commentsCount: number;
   imageUrl?: string;
   link?: string;
   isBookmarked?: boolean;
@@ -56,8 +57,8 @@ export default function CommunityPage() {
           const formattedPosts = postsRes.data.map(post => ({
             ...post,
             id: String(post.id), // Ensure ID is a string
-            votes: post.votes || 0,
-            comments: post.comments || 0,
+            votesCount: post.votesCount || 0,
+            commentsCount: post.commentsCount || 0,
             community: communityRes.data?.name || '',
             communityIcon: communityRes.data?.icon || '',
             createdAt: new Date() // You might want to get this from the API

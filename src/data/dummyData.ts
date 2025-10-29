@@ -9,8 +9,8 @@ export const dummyPosts = [
     community: 'r/webdev',
     communityIcon: '🌐',
     createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
-    votes: 1247,
-    comments: 89,
+    votesCount: 1247,
+    commentsCount: 89,
     imageUrl: undefined,
     link: 'https://developer.mozilla.org/en-US/docs/Web'
   },
@@ -22,8 +22,8 @@ export const dummyPosts = [
     community: 'r/reactjs',
     communityIcon: '⚛️',
     createdAt: new Date(Date.now() - 4 * 60 * 60 * 1000),
-    votes: 892,
-    comments: 67
+    votesCount: 892,
+    commentsCount: 67
   },
   {
     id: '3',
@@ -33,8 +33,8 @@ export const dummyPosts = [
     community: 'r/technology',
     communityIcon: '💻',
     createdAt: new Date(Date.now() - 6 * 60 * 60 * 1000),
-    votes: 3421,
-    comments: 234,
+    votesCount: 3421,
+    commentsCount: 234,
     imageUrl: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800&h=400&fit=crop'
   },
   {
@@ -45,8 +45,8 @@ export const dummyPosts = [
     community: 'r/reactjs',
     communityIcon: '⚛️',
     createdAt: new Date(Date.now() - 8 * 60 * 60 * 1000),
-    votes: 567,
-    comments: 43
+    votesCount: 567,
+    commentsCount: 43
   },
   {
     id: '5',
@@ -56,8 +56,8 @@ export const dummyPosts = [
     community: 'r/programming',
     communityIcon: '👨‍💻',
     createdAt: new Date(Date.now() - 12 * 60 * 60 * 1000),
-    votes: 2156,
-    comments: 145
+    votesCount: 2156,
+    commentsCount: 145
   }
 ];
 

@@ -19,7 +19,6 @@ interface Community {
   createdAt: string;
   updatedAt: string;
   ownerId: number;
-  membersCount?: number;
 }
 
 const CommunitiesPage = () => {
@@ -67,13 +66,6 @@ const CommunitiesPage = () => {
           : [...prev, communityId]
       );
 
-      // Update members count optimistically
-      setCommunities(communities.map(c => 
-        c.id === communityId 
-          ? { ...c, membersCount: (c.membersCount || 0) + (isCurrentlyJoined ? -1 : 1) }
-          : c
-      ));
-
       // API call
       const response = isCurrentlyJoined
         ? await api.post<{ success: boolean }>(`/communities/${communityId}/leave`)
@@ -90,11 +82,6 @@ const CommunitiesPage = () => {
           ? prev.filter(id => id !== communityId)
           : [...prev, communityId]
       );
-      setCommunities(communities.map(c => 
-        c.id === communityId 
-          ? { ...c, membersCount: (c.membersCount || 0) + (isCurrentlyJoined ? 1 : -1) }
-          : c
-      ));
       setError(`Failed to ${joinedCommunityIds.includes(communityId) ? 'leave' : 'join'} community`);
       console.error('Error updating community membership:', err);
     }
@@ -192,6 +179,7 @@ const CommunitiesPage = () => {
                     {community.description || 'No description provided'}
                   </p>
                 </div>
+
               </CardHeader>
               <CardFooter className="flex justify-between items-center pt-2">
                 <div className="flex items-center text-sm text-muted-foreground">
