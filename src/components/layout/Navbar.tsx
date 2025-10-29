@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { Search, Bell, User, Menu, MessageSquare } from 'lucide-react';
-import { Link , useNavigate} from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useAuthModal } from '../../hooks/useAuthModal';
 import { LogIn, ChevronDown } from 'lucide-react';
 import { ThemeToggle } from '../theme-toggle';
+import { useTheme } from 'next-themes';
 import LOGO from '../../../public/Logo.svg';
+import LOGO_DARK from '../../../public/Logo-Dark.png';
 interface NavbarProps {
   onToggleSidebar: () => void;
   isSidebarOpen: boolean;
@@ -34,7 +36,13 @@ const Navbar = ({ onToggleSidebar, isSidebarOpen }: NavbarProps) => {
           </button>
           
           <Link to="/" className="flex items-center space-x-2">       
-              <span className="text-primary-foreground font-bold text-lg"><img src={LOGO} alt="Logo" className="w-24 h-20" /></span>
+              <span className="text-primary-foreground font-bold text-lg">
+                <img 
+                  src={useTheme().theme === 'dark' ? LOGO_DARK : LOGO} 
+                  alt="Logo" 
+                  className={`w-24 ${useTheme().theme === 'dark' ? 'h-12' : 'h-20'}`} 
+                />
+              </span>
           </Link>
         </div>
 
