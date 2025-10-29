@@ -59,6 +59,10 @@ export const PostCard: React.FC<PostCardProps> = ({ post }) => {
 
   const handleCommentClick = (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (!post.community) {
+      alert('Please select a community before viewing this post');
+      return;
+    }
     navigate(`/post/${post.id}`);
   };
 
@@ -67,8 +71,8 @@ export const PostCard: React.FC<PostCardProps> = ({ post }) => {
     : post.content;
 
   return (
-    <article className="post-card bg-card border border-border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200 mb-4">
-      <div className="p-5">
+    <article className="post-card bg-card/50 backdrop-blur-sm border border-border/50 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 mb-4 hover:bg-card/80 dark:hover:bg-card/90">
+      <div className="p-5 transition-colors duration-200">
         {/* Header */}
         <div className="flex items-center space-x-2 text-sm text-muted-foreground mb-3">
           <span className="text-lg">{post.communityIcon}</span>
@@ -146,7 +150,7 @@ export const PostCard: React.FC<PostCardProps> = ({ post }) => {
         )}
 
         {/* Actions */}
-        <div className="flex items-center justify-between pt-3 border-t border-border/50">
+        <div className="flex items-center justify-between pt-3 border-t border-border/30">
           <div className="flex items-center space-x-4">
             <VotingSystem 
               initialVotes={post.votesCount} 
@@ -156,7 +160,7 @@ export const PostCard: React.FC<PostCardProps> = ({ post }) => {
             />
             
             <button 
-              className="flex items-center space-x-1.5 px-2.5 py-1.5 rounded-md hover:bg-muted/50 transition-colors duration-200 text-muted-foreground hover:text-foreground"
+              className="flex items-center space-x-1.5 px-2.5 py-1.5 rounded-md hover:bg-muted/30 transition-colors duration-200 text-muted-foreground hover:text-foreground"
               onClick={handleCommentClick}
             >
               <MessageCircle className="h-4 w-4" />
@@ -165,7 +169,7 @@ export const PostCard: React.FC<PostCardProps> = ({ post }) => {
 
             <button 
               onClick={handleShare}
-              className="flex items-center space-x-1.5 px-2.5 py-1.5 rounded-md hover:bg-muted/50 transition-colors duration-200 text-muted-foreground hover:text-foreground"
+              className="flex items-center space-x-1.5 px-2.5 py-1.5 rounded-md hover:bg-muted/30 transition-colors duration-200 text-muted-foreground hover:text-foreground"
             >
               <Share className="h-4 w-4" />
               <span className="text-sm font-medium">Share</span>
@@ -176,7 +180,7 @@ export const PostCard: React.FC<PostCardProps> = ({ post }) => {
               className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-md transition-colors duration-200 ${
                 isBookmarked 
                   ? 'text-primary hover:bg-primary/5' 
-                  : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+                  : 'text-muted-foreground hover:bg-muted/30 hover:text-foreground'
               }`}
             >
               <Bookmark className={`h-4 w-4 ${isBookmarked ? 'fill-current' : ''}`} />
@@ -185,7 +189,7 @@ export const PostCard: React.FC<PostCardProps> = ({ post }) => {
           </div>
 
           <button 
-            className="p-1.5 rounded-md hover:bg-muted/50 transition-colors duration-200 text-muted-foreground hover:text-foreground"
+            className="p-1.5 rounded-md hover:bg-muted/30 transition-colors duration-200 text-muted-foreground hover:text-foreground"
             aria-label="More options"
           >
             <MoreHorizontal className="h-4 w-4" />
