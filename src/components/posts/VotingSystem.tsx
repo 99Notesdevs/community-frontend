@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronUp, ChevronDown } from 'lucide-react';
+import { ChevronUp, ChevronDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { api } from '@/api/route';
 
@@ -40,7 +40,7 @@ const VotingSystem = ({
       
       const response = await api.post(endpoint, { voteType });
       
-      if (response.success) {
+      if (response) {
         // Update local state
         let newVotes = votes;
         
@@ -66,14 +66,15 @@ const VotingSystem = ({
     }
   };
 
-  const formatVotes = (count: number) => {
-    if (Math.abs(count) >= 1000000) {
-      return (count / 1000000).toFixed(1) + 'M';
+  const formatVotes = (count: number | undefined | null) => {
+    const num = count || 0;
+    if (Math.abs(num) >= 1000000) {
+      return (num / 1000000).toFixed(1) + 'M';
     }
-    if (Math.abs(count) >= 1000) {
-      return (count / 1000).toFixed(1) + 'K';
+    if (Math.abs(num) >= 1000) {
+      return (num / 1000).toFixed(1) + 'K';
     }
-    return count.toString();
+    return num.toString();
   };
 
   const sizeClasses = {
@@ -90,41 +91,40 @@ const VotingSystem = ({
 
   return (
     <div className={cn(
-      "flex items-center",
-      orientation === 'vertical' ? "flex-col space-y-1" : "flex-row space-x-2"
+      "flex items-center bg-gray-50 dark:bg-gray-800 rounded-lg p-1",
+      orientation === 'vertical' ? "flex-col space-y-1" : "flex-row space-x-1"
     )}>
       <button
         onClick={() => handleVote('up')}
         disabled={isLoading}
         className={cn(
-          "vote-button hover:text-vote-upvote transition-colors disabled:opacity-50",
+          "p-1.5 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors disabled:opacity-50",
+          userVote === 'up' ? 'text-orange-500' : 'text-gray-500 dark:text-gray-400',
           sizeClasses[size],
-          userVote === 'up' ? "text-vote-upvote" : "text-muted-foreground"
         )}
-        aria-label="Upvote"
       >
-        <ChevronUp className={iconSizeClasses[size]} />
+        <ArrowUp className={cn(iconSizeClasses[size], 'stroke-2')} />
       </button>
       
       <span className={cn(
-        "font-bold transition-smooth select-none",
-        votes > 0 ? "text-vote-upvote" : votes < 0 ? "text-vote-downvote" : "text-muted-foreground",
-        size === 'sm' ? "text-xs" : size === 'md' ? "text-sm" : "text-base"
+        "font-semibold text-center min-w-[24px] text-sm text-gray-700 dark:text-gray-200",
+        size === 'sm' ? 'text-xs' : size === 'md' ? 'text-sm' : 'text-base'
       )}>
         {formatVotes(votes)}
       </span>
+      
+      <div className="border-t border-gray-200 dark:border-gray-700 w-4 mx-auto my-1"></div>
       
       <button
         onClick={() => handleVote('down')}
         disabled={isLoading}
         className={cn(
-          "vote-button hover:text-vote-downvote transition-colors disabled:opacity-50",
+          "p-1.5 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors disabled:opacity-50",
+          userVote === 'down' ? 'text-blue-500' : 'text-gray-500 dark:text-gray-400',
           sizeClasses[size],
-          userVote === 'down' ? "text-vote-downvote" : "text-muted-foreground"
         )}
-        aria-label="Downvote"
       >
-        <ChevronDown className={iconSizeClasses[size]} />
+        <ArrowDown className={cn(iconSizeClasses[size], 'stroke-2')} />
       </button>
     </div>
   );

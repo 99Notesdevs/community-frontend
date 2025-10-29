@@ -67,108 +67,105 @@ export const PostCard: React.FC<PostCardProps> = ({ post }) => {
     : post.content;
 
   return (
-    <article className="post-card p-4 mb-4">
-      <div className="flex space-x-3">
-        {/* Voting System */}
-        <div className="flex-shrink-0">
-          <VotingSystem 
-            initialVotes={post.votesCount} 
-            postId={post.id}
-            orientation="vertical"
-            size="md"
-          />
+    <article className="post-card bg-card border border-border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200 mb-4">
+      <div className="p-5">
+        {/* Header */}
+        <div className="flex items-center space-x-2 text-sm text-muted-foreground mb-3">
+          <span className="text-lg">{post.communityIcon}</span>
+          <span className="font-medium text-foreground">{post.community}</span>
+          <span className="text-muted-foreground/50">•</span>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <span 
+                className="hover:underline cursor-pointer hover:text-foreground"
+                onClick={(e) => e.stopPropagation()}
+              >
+                Posted by u/{post.author}
+              </span>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-48">
+              <DropdownMenuItem onClick={handleViewProfile}>
+                <User className="mr-2 h-4 w-4" />
+                <span>View Profile</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleMessageUser}>
+                <MessageSquare className="mr-2 h-4 w-4" />
+                <span>Message</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <span>•</span>
+          <span>{formatDistanceToNow(post.createdAt, { addSuffix: true })}</span>
         </div>
 
+        {/* Title */}
+        <h2 className="text-xl font-semibold text-foreground mb-3 leading-snug">
+          {post.title}
+        </h2>
+
         {/* Content */}
-        <div className="flex-1 min-w-0">
-          {/* Header */}
-          <div className="flex items-center space-x-2 text-sm text-muted-foreground mb-2">
-            <span className="text-lg">{post.communityIcon}</span>
-            <span className="font-medium text-foreground">{post.community}</span>
-            <span>•</span>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <span 
-                  className="hover:underline cursor-pointer hover:text-foreground"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  Posted by u/{post.author}
-                </span>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-48">
-                <DropdownMenuItem onClick={handleViewProfile}>
-                  <User className="mr-2 h-4 w-4" />
-                  <span>View Profile</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleMessageUser}>
-                  <MessageSquare className="mr-2 h-4 w-4" />
-                  <span>Message</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <span>•</span>
-            <span>{formatDistanceToNow(post.createdAt, { addSuffix: true })}</span>
-          </div>
-
-          {/* Title */}
-          <h2 className="text-lg font-semibold text-foreground mb-2 leading-tight">
-            {post.title}
-          </h2>
-
-          {/* Content */}
-          <div className="text-foreground mb-3">
-            <p className="whitespace-pre-wrap">
-              {showFullContent ? post.content : truncatedContent}
-            </p>
-            {post.content.length > 300 && (
-              <button
-                onClick={() => setShowFullContent(!showFullContent)}
-                className="text-primary hover:text-primary-hover text-sm font-medium mt-1"
-              >
-                {showFullContent ? 'Show less' : 'Read more'}
-              </button>
-            )}
-          </div>
-
-          {/* Image */}
-          {post.imageUrl && (
-            <div className="mb-3 rounded-lg overflow-hidden">
-              <img 
-                src={post.imageUrl} 
-                alt="Post image"
-                className="w-full max-h-96 object-cover hover:scale-105 transition-transform duration-300"
-              />
-            </div>
-          )}
-
-          {/* External Link */}
-          {post.link && (
-            <a 
-              href={post.link}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center space-x-2 p-3 border border-border rounded-lg hover:bg-muted transition-smooth mb-3"
+        <div className="text-foreground/90 mb-4">
+          <p className="whitespace-pre-wrap text-foreground/90 mb-2 leading-relaxed">
+            {showFullContent ? post.content : truncatedContent}
+          </p>
+          {post.content.length > 300 && (
+            <button
+              onClick={() => setShowFullContent(!showFullContent)}
+              className="text-primary hover:text-primary/90 text-sm font-medium mt-1 transition-colors duration-200"
             >
-              <ExternalLink className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm text-primary hover:text-primary-hover">
-                {new URL(post.link).hostname}
-              </span>
-            </a>
+              {showFullContent ? 'Show less' : 'Read more'}
+            </button>
           )}
+        </div>
 
-          {/* Actions */}
+        {/* Image */}
+        {post.imageUrl && (
+          <div className="mb-4 rounded-lg overflow-hidden border border-border">
+            <img 
+              src={post.imageUrl} 
+              alt="Post image"
+              className="w-full max-h-96 object-cover hover:scale-[1.02] transition-transform duration-300"
+              loading="lazy"
+            />
+          </div>
+        )}
+
+        {/* External Link */}
+        {post.link && (
+          <a 
+            href={post.link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center space-x-2 p-3 border border-border rounded-lg hover:bg-muted/50 transition-colors duration-200 mb-4 group"
+          >
+            <ExternalLink className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+            <span className="text-sm text-primary group-hover:text-primary/90 transition-colors">
+              {new URL(post.link).hostname}
+            </span>
+          </a>
+        )}
+
+        {/* Actions */}
+        <div className="flex items-center justify-between pt-3 border-t border-border/50">
           <div className="flex items-center space-x-4">
+            <VotingSystem 
+              initialVotes={post.votesCount} 
+              postId={post.id}
+              orientation="horizontal"
+              size="md"
+            />
+            
             <button 
-              className="flex items-center space-x-1 hover:bg-secondary px-2 py-1 rounded-md"
+              className="flex items-center space-x-1.5 px-2.5 py-1.5 rounded-md hover:bg-muted/50 transition-colors duration-200 text-muted-foreground hover:text-foreground"
               onClick={handleCommentClick}
             >
               <MessageCircle className="h-4 w-4" />
-              <span>{post.commentsCount} Comments</span>
+              <span className="text-sm font-medium">{post.commentsCount} Comments</span>
             </button>
 
             <button 
               onClick={handleShare}
-              className="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-muted transition-smooth text-muted-foreground hover:text-foreground"
+              className="flex items-center space-x-1.5 px-2.5 py-1.5 rounded-md hover:bg-muted/50 transition-colors duration-200 text-muted-foreground hover:text-foreground"
             >
               <Share className="h-4 w-4" />
               <span className="text-sm font-medium">Share</span>
@@ -176,19 +173,26 @@ export const PostCard: React.FC<PostCardProps> = ({ post }) => {
 
             <button 
               onClick={handleBookmark}
-              className={`flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-muted transition-smooth ${
-                isBookmarked ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
+              className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-md transition-colors duration-200 ${
+                isBookmarked 
+                  ? 'text-primary hover:bg-primary/5' 
+                  : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
               }`}
             >
               <Bookmark className={`h-4 w-4 ${isBookmarked ? 'fill-current' : ''}`} />
               <span className="text-sm font-medium">Save</span>
             </button>
-
-            <button className="p-2 rounded-lg hover:bg-muted transition-smooth text-muted-foreground hover:text-foreground">
-              <MoreHorizontal className="h-4 w-4" />
-            </button>
           </div>
+
+          <button 
+            className="p-1.5 rounded-md hover:bg-muted/50 transition-colors duration-200 text-muted-foreground hover:text-foreground"
+            aria-label="More options"
+          >
+            <MoreHorizontal className="h-4 w-4" />
+          </button>
         </div>
+        
+         
       </div>
     </article>
   );
