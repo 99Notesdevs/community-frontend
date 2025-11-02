@@ -67,7 +67,7 @@ const PostCreationBar = () => {
       url?: string;
       imageUrl?: string;
       videoUrl?: string;
-      pollOptions?: Array<{ text: string }>;
+      pollOptions?: Array<string>;
     } = {
       communityId: selectedCommunity.id,
       title: title.trim(),
@@ -93,7 +93,7 @@ const PostCreationBar = () => {
 
       payload.imageUrl = upload;
     } else if (postType === 'POLL') {
-      payload.pollOptions = pollOptions.filter(opt => opt.text.trim());
+      payload.pollOptions = pollOptions.map(opt => opt.text.trim()).filter(text => text);
     }
 
     try {

@@ -52,7 +52,7 @@ const App = () => {
                       <Route path="/r/:id" element={<CommunityPage />} />
                       <Route path="/u/:id" element={<UserPage />} />
                       <Route path="/messages" element={<MessagesPage />} />
-                      <Route path="/comments/:id" element={<CommentsPage />} />
+                      <Route path="/post/:id" element={<CommentsPage />} />
                       <Route path="/profile" element={<UserProfile />} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
