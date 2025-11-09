@@ -20,6 +20,7 @@ import CommunityPage from './pages/CommunityPage';
 import UserPage from './pages/UserPage';
 import CommentsPage from './pages/CommentsPage';
 import UserProfile from './pages/UserProfile';
+import Bookmark from './pages/bookmark';
 
 const App = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -49,6 +50,7 @@ const App = () => {
                       <Route path="/trending" element={<TrendingPage />} />
                       <Route path="/explore" element={<ExplorePage />} />
                       <Route path="/communities" element={<CommunitiesPage />} />
+                      <Route path="/bookmarks" element={<Bookmark />} />
                       <Route path="/r/:id" element={<CommunityPage />} />
                       <Route path="/u/:id" element={<UserPage />} />
                       <Route path="/messages" element={<MessagesPage />} />

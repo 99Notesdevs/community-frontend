@@ -141,25 +141,25 @@ const Homepage = () => {
 
   // Skeleton loader component
   const SkeletonPost = () => (
-    <div className="bg-card rounded-xl p-6 mb-6 border border-border animate-pulse">
-      <div className="flex items-center space-x-3 mb-4">
-        <div className="w-8 h-8 rounded-full bg-muted"></div>
-        <div className="space-y-1">
-          <div className="h-4 w-24 bg-muted rounded"></div>
-          <div className="h-3 w-16 bg-muted rounded"></div>
+    <div className="bg-card border border-border/50 p-4 mb-3 animate-pulse">
+      <div className="flex items-center space-x-2.5 mb-3">
+        <div className="w-7 h-7 rounded-full bg-muted"></div>
+        <div className="space-y-1.5">
+          <div className="h-3 w-20 bg-muted"></div>
+          <div className="h-2.5 w-12 bg-muted"></div>
         </div>
       </div>
-      <div className="space-y-2">
-        <div className="h-5 w-3/4 bg-muted rounded"></div>
-        <div className="h-4 w-full bg-muted rounded"></div>
-        <div className="h-4 w-5/6 bg-muted rounded"></div>
+      <div className="space-y-2 mb-3">
+        <div className="h-4 w-3/4 bg-muted"></div>
+        <div className="h-3.5 w-full bg-muted"></div>
+        <div className="h-3.5 w-5/6 bg-muted"></div>
       </div>
-      <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
-        <div className="flex space-x-4">
-          <div className="h-8 w-16 bg-muted rounded"></div>
-          <div className="h-8 w-16 bg-muted rounded"></div>
+      <div className="flex items-center justify-between pt-3 border-t border-border/50">
+        <div className="flex space-x-3">
+          <div className="h-7 w-14 bg-muted"></div>
+          <div className="h-7 w-14 bg-muted"></div>
         </div>
-        <div className="h-8 w-20 bg-muted rounded"></div>
+        <div className="h-7 w-16 bg-muted"></div>
       </div>
     </div>
   );
@@ -206,31 +206,31 @@ const Homepage = () => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
-      <div className="mb-8">
+    <div className="max-w-4xl mx-auto px-4 py-6">
+      <div className="mb-6">
         <PostCreationBar />
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-3">
         {sortedPosts.length > 0 ? (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {sortedPosts.map((post) => (
               <div 
                 key={post.id} 
-                className="bg-card rounded-xl border border-border overflow-hidden transition-all hover:shadow-md hover:border-primary/20"
+                className="bg-card border border-border/50 hover:border-border transition-colors duration-200"
               >
                 <PostCard post={post} />
               </div>
             ))}
           </div>
         ) : (
-          <div className="bg-card rounded-xl border border-dashed border-border p-12 text-center">
-            <div className="mx-auto w-16 h-16 bg-muted/30 rounded-full flex items-center justify-center mb-4">
+          <div className="bg-card border border-dashed border-border/50 p-8 text-center">
+            <div className="mx-auto w-12 h-12 flex items-center justify-center mb-3">
               {activeTab === 'saved' ? (
-                <Bookmark className="h-8 w-8 text-muted-foreground" />
+                <Bookmark className="h-6 w-6 text-muted-foreground" />
               ) : (
                 <svg 
-                  className="h-8 w-8 text-muted-foreground" 
+                  className="h-6 w-6 text-muted-foreground" 
                   fill="none" 
                   viewBox="0 0 24 24" 
                   stroke="currentColor"
@@ -238,16 +238,16 @@ const Homepage = () => {
                   <path 
                     strokeLinecap="round" 
                     strokeLinejoin="round" 
-                    strokeWidth="1.5" 
+                    strokeWidth="2" 
                     d="M12 4v16m8-8H4" 
                   />
                 </svg>
               )}
             </div>
-            <h3 className="text-lg font-medium text-foreground mb-1">
+            <h3 className="text-base font-medium text-foreground mb-1">
               {activeTab === 'saved' ? 'No saved posts' : 'No posts yet'}
             </h3>
-            <p className="text-muted-foreground max-w-md mx-auto">
+            <p className="text-sm text-muted-foreground max-w-sm mx-auto">
               {activeTab === 'saved'
                 ? 'Posts you save will appear here. Start exploring and save posts you want to come back to later.'
                 : 'Be the first to create a post and start the conversation!'}
@@ -255,7 +255,7 @@ const Homepage = () => {
             {activeTab !== 'saved' && (
               <button
                 onClick={() => document.querySelector('textarea')?.focus()}
-                className="mt-4 inline-flex items-center px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
+                className="mt-3 inline-flex items-center px-3.5 py-1.5 bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
               >
                 Create Post
               </button>

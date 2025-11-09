@@ -10,7 +10,31 @@ import {
 import VotingSystem from './VotingSystem';
 import { formatDistanceToNow } from 'date-fns';
 import { api } from '@/api/route';
+
+interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+  message?: string;
+}
 import { toast } from 'sonner';
+
+export interface Post {
+  id: string;
+  title: string;
+  content: string;
+  type: 'TEXT' | 'IMAGE' | 'LINK' | 'POLL';
+  author: string;
+  authorId: string;
+  community: string;
+  communityIcon: string;
+  createdAt: Date;
+  votesCount: number;
+  commentsCount: number;
+  imageUrl?: string;
+  link?: string;
+  isBookmarked?: boolean;
+  poll?: Poll;
+}
 
 interface PollOption {
   id: string;
@@ -30,29 +54,13 @@ interface Poll {
   pollOptionId?: string;
 }
 
-interface Post {
-  id: string;
-  title: string;
-  content: string;
-  type: 'TEXT' | 'IMAGE' | 'LINK' | 'POLL';
-  author: string;
-  authorId: string;
-  community: string;
-  communityIcon: string;
-  createdAt: Date;
-  votesCount: number;
-  commentsCount: number;
-  imageUrl?: string;
-  link?: string;
-  isBookmarked?: boolean;
-  poll?: Poll;
-}
 
 interface PostCardProps {
   post: Post;
+  onBookmarkToggle?: (postId: string) => Promise<void>;
 }
 
-export const PostCard: React.FC<PostCardProps> = ({ post }) => {
+export const PostCard: React.FC<PostCardProps> = ({ post, onBookmarkToggle }) => {
   const [isBookmarked, setIsBookmarked] = useState(post.isBookmarked || false);
   const [showFullContent, setShowFullContent] = useState(false);
   const [pollState, setPollState] = useState<Poll | null>(post.poll || null);
@@ -61,16 +69,18 @@ export const PostCard: React.FC<PostCardProps> = ({ post }) => {
 
   // Fetch poll data if it's a poll post
   useEffect(() => {
-  // Inside the useEffect hook
-const fetchPollData = async () => {
-  if (post.type === 'POLL' && post.id) {
-    try {
-      const [optionsRes, resultsRes] = await Promise.all([
-        api.get(`/polls/options/${post.id}`),
-        api.get(`/polls/results/${post.id}`)
-      ]);
-      
-      if (optionsRes.success && resultsRes.success) {
+  const fetchPollData = async () => {
+    if (post.type === 'POLL' && post.id) {
+      try {
+        const [optionsRes, resultsRes] = await Promise.all([
+          api.get<ApiResponse<any>>(`/polls/options/${post.id}`),
+          api.get<ApiResponse<any>>(`/polls/results/${post.id}`)
+        ]);
+        
+        const optionsData = optionsRes as unknown as ApiResponse<any>;
+        const resultsData = resultsRes as unknown as ApiResponse<any>;
+        
+        if (optionsData.success && resultsData.success) {
         // Get current user ID from your auth context or local storage
         const currentUserId = 1; // Replace with actual user ID
         
@@ -78,7 +88,7 @@ const fetchPollData = async () => {
         const optionsMap = new Map();
         
         // Process options response
-        optionsRes.data.forEach((opt: any) => {
+        optionsData.data.forEach((opt: any) => {
           optionsMap.set(opt.id, {
             id: opt.id.toString(),
             text: opt.text,
@@ -88,7 +98,7 @@ const fetchPollData = async () => {
         });
         
         // Process results to update vote counts and check if user has voted
-        const options = resultsRes.data.map((result: any) => {
+        const options = resultsData.data.map((result: any) => {
           const option = optionsMap.get(result.id) || {
             id: result.id.toString(),
             text: result.text,
@@ -132,9 +142,19 @@ const fetchPollData = async () => {
     console.log('Post URL copied to clipboard');
   };
 
-  const handleBookmark = () => {
-    setIsBookmarked(!isBookmarked);
-    api.post(`/bookmark/${post.id}/bookmark`);
+  const handleBookmark = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      if (onBookmarkToggle) {
+        await onBookmarkToggle(post.id);
+      } else {
+        await api.post(`/bookmark/${post.id}/bookmark`);
+        setIsBookmarked(!isBookmarked);
+      }
+    } catch (error) {
+      console.error('Error toggling bookmark:', error);
+      toast.error('Failed to update bookmark');
+    }
   };
 
   const handleMessageUser = (e: React.MouseEvent) => {
@@ -161,16 +181,18 @@ const fetchPollData = async () => {
     : post.content;
 
   const handleVote = async (pollOptionId: string) => {
-  if (!pollState || pollState.hasVoted || isLoading) return;
-  
-  try {
-    setIsLoading(true);
-    const response = await api.post('/polls/vote', { 
-      pollOptionId: parseInt(pollOptionId),
-      postId: post.id 
-    });
+    if (!pollState || pollState.hasVoted || isLoading) return;
+    
+    try {
+      setIsLoading(true);
+      const response = await api.post<ApiResponse<{ success: boolean }>>('/polls/vote', { 
+        pollOptionId: parseInt(pollOptionId),
+        postId: post.id 
+      });
 
-    if (response.success) {
+      const responseData = response as unknown as ApiResponse<{ success: boolean }>;
+
+      if (responseData.success) {
       // Update the local state to reflect the vote
       const updatedOptions = pollState.options.map(opt => {
         const isSelected = opt.id === pollOptionId;
@@ -200,10 +222,10 @@ const fetchPollData = async () => {
 };
 
   return (
-    <article className="post-card bg-card/50 backdrop-blur-sm border border-border/50 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 mb-4 hover:bg-card/80 dark:hover:bg-card/90">
-      <div className="p-5 transition-colors duration-200">
+    <article className="post-card bg-card border border-border/30 rounded-md overflow-hidden shadow-xs hover:shadow-sm transition-all duration-200 mb-3 hover:bg-card/90 dark:hover:bg-card/90">
+      <div className="p-4 transition-colors duration-200">
         {/* Header */}
-        <div className="flex items-center space-x-2 text-sm text-muted-foreground mb-3">
+        <div className="flex items-center space-x-2 text-xs text-muted-foreground mb-2">
           <span className="text-lg">{post.communityIcon}</span>
           <span className="font-medium text-foreground">{post.community}</span>
           <span className="text-muted-foreground/50">•</span>
@@ -232,19 +254,19 @@ const fetchPollData = async () => {
         </div>
 
         {/* Title */}
-        <h2 className="text-xl font-semibold text-foreground mb-3 leading-snug">
+        <h2 className="text-lg font-medium text-foreground mb-2 leading-tight">
           {post.title}
         </h2>
 
         {/* Content */}
-        <div className="text-foreground/90 mb-4">
-          <p className="whitespace-pre-wrap text-foreground/90 mb-2 leading-relaxed">
+        <div className="text-foreground/80 mb-3 text-sm">
+          <p className="whitespace-pre-wrap mb-2 leading-normal">
             {showFullContent ? post.content : truncatedContent}
           </p>
           {post.content.length > 300 && (
             <button
               onClick={() => setShowFullContent(!showFullContent)}
-              className="text-primary hover:text-primary/90 text-sm font-medium mt-1 transition-colors duration-200"
+              className="text-primary hover:text-primary/80 text-xs font-medium mt-1 transition-colors duration-200"
             >
               {showFullContent ? 'Show less' : 'Read more'}
             </button>
@@ -253,11 +275,11 @@ const fetchPollData = async () => {
 
         {/* Image */}
         {post.imageUrl && (
-          <div className="mb-4 rounded-lg overflow-hidden border border-border">
+          <div className="mb-3 rounded overflow-hidden border border-border">
             <img 
               src={post.imageUrl} 
               alt="Post image"
-              className="w-full max-h-96 object-cover hover:scale-[1.02] transition-transform duration-300"
+              className="w-full max-h-80 object-cover hover:opacity-95 transition-opacity duration-200"
               loading="lazy"
             />
           </div>
@@ -347,8 +369,8 @@ const fetchPollData = async () => {
         )}
 
         {/* Actions */}
-        <div className="flex items-center justify-between pt-3 border-t border-border/30">
-          <div className="flex items-center space-x-4">
+        <div className="flex items-center justify-between pt-2 border-t border-border/20">
+          <div className="flex items-center space-x-3">
             <VotingSystem 
               initialVotes={post.votesCount} 
               postId={post.id}
@@ -357,19 +379,19 @@ const fetchPollData = async () => {
             />
             
             <button 
-              className="flex items-center space-x-1.5 px-2.5 py-1.5 rounded-md hover:bg-muted/30 transition-colors duration-200 text-muted-foreground hover:text-foreground"
+              className="flex items-center space-x-1.5 px-2 py-1 rounded hover:bg-muted/20 transition-colors duration-150 text-muted-foreground hover:text-foreground text-sm"
               onClick={handleCommentClick}
             >
               <MessageCircle className="h-4 w-4" />
-              <span className="text-sm font-medium">{post.commentsCount} Comments</span>
+              <span className="text-xs font-medium">{post.commentsCount}</span>
             </button>
 
             <button 
               onClick={handleShare}
-              className="flex items-center space-x-1.5 px-2.5 py-1.5 rounded-md hover:bg-muted/30 transition-colors duration-200 text-muted-foreground hover:text-foreground"
+              className="flex items-center space-x-1.5 px-2 py-1 rounded hover:bg-muted/20 transition-colors duration-150 text-muted-foreground hover:text-foreground text-sm"
             >
               <Share className="h-4 w-4" />
-              <span className="text-sm font-medium">Share</span>
+              <span className="text-xs font-medium">Share</span>
             </button>
 
             <button 
@@ -381,7 +403,7 @@ const fetchPollData = async () => {
               }`}
             >
               <Bookmark className={`h-4 w-4 ${isBookmarked ? 'fill-current' : ''}`} />
-              <span className="text-sm font-medium">Save</span>
+              <span className="text-xs font-medium">{isBookmarked ? 'Saved' : 'Save'}</span>
             </button>
           </div>
 

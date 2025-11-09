@@ -97,16 +97,15 @@ const CommunitiesPage = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
-       
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <div className="w-full sm:w-auto">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               type="text"
               placeholder="Search communities..."
-              className="pl-10 w-full sm:w-80"
+              className="pl-10 w-full sm:w-80 rounded-sm border-border/50 focus-visible:ring-1"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -117,40 +116,42 @@ const CommunitiesPage = () => {
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {Array.from({ length: 8 }).map((_, i) => (
-            <Card key={i} className="overflow-hidden transition-all hover:shadow-md">
-              <Skeleton className="h-32 w-full" />
-              <CardHeader className="relative">
-                <div className="absolute -top-6 left-4">
-                  <Skeleton className="h-12 w-12 rounded-full" />
+            <Card key={i} className="overflow-hidden transition-all hover:shadow-sm border-border/50 hover:border-foreground/20">
+              <Skeleton className="h-28 w-full" />
+              <CardHeader className="relative pb-2 pt-6">
+                <div className="absolute -top-5 left-4 h-10 w-10 rounded-sm border-2 border-background bg-background overflow-hidden shadow-sm">
+                  <Skeleton className="h-10 w-10 rounded-sm" />
                 </div>
-                <div className="pt-6">
+                <div className="pt-1">
                   <Skeleton className="h-5 w-3/4 mb-2" />
                   <Skeleton className="h-4 w-full" />
                   <Skeleton className="h-4 w-2/3 mt-2" />
                 </div>
               </CardHeader>
-              <CardFooter>
+              <CardFooter className="flex justify-between items-center pt-2 px-4 pb-3">
                 <Skeleton className="h-9 w-full" />
               </CardFooter>
             </Card>
           ))}
         </div>
       ) : communities.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {communities.map((community) => (
-            <Card key={community.id} className="group overflow-hidden transition-all hover:shadow-md hover:-translate-y-1">
-              <div className="h-32 bg-gradient-to-r from-blue-500 to-purple-600 relative overflow-hidden">
-                {community.bannerUrl && (
+            <Card key={community.id} className="group overflow-hidden transition-all hover:shadow-sm border-border/50 hover:border-foreground/20">
+              <div className="h-28 bg-muted/30 relative overflow-hidden">
+                {community.bannerUrl ? (
                   <img 
                     src={community.bannerUrl} 
                     alt="" 
                     className="w-full h-full object-cover"
                   />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-muted/50 to-muted/20" />
                 )}
-                <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/30 to-transparent" />
               </div>
-              <CardHeader className="relative pb-2">
-                <div className="absolute -top-6 left-4 h-12 w-12 rounded-full border-4 border-background bg-background overflow-hidden shadow-md">
+              <CardHeader className="relative pb-2 pt-6">
+                <div className="absolute -top-5 left-4 h-10 w-10 rounded-sm border-2 border-background bg-background overflow-hidden shadow-sm">
                   {community.iconUrl ? (
                     <img 
                       src={community.iconUrl} 
@@ -158,39 +159,38 @@ const CommunitiesPage = () => {
                       className="h-full w-full object-cover"
                     />
                   ) : (
-                    <div className="h-full w-full bg-muted/50 flex items-center justify-center">
-                      <Users className="h-5 w-5 text-muted-foreground" />
+                    <div className="h-full w-full bg-muted/30 flex items-center justify-center">
+                      <Users className="h-4 w-4 text-muted-foreground" />
                     </div>
                   )}
                 </div>
-                <div className="pt-6">
+                <div className="pt-1">
                   <div className="flex items-center gap-2">
                     <Link 
                       to={`/r/${community.id}`} 
-                      className="font-semibold hover:underline text-foreground/90 hover:text-foreground transition-colors"
+                      className="font-medium text-sm hover:underline text-foreground/90 hover:text-foreground transition-colors truncate max-w-[80%]"
                     >
                       r/{community.name}
                     </Link>
                     {community.nsfw && (
-                      <Badge variant="destructive" className="text-xs">NSFW</Badge>
+                      <Badge variant="destructive" className="text-[10px] px-1.5 py-0 h-4">NSFW</Badge>
                     )}
                   </div>
-                  <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                  <p className="text-xs text-muted-foreground mt-1 line-clamp-2 leading-relaxed">
                     {community.description || 'No description provided'}
                   </p>
                 </div>
-
               </CardHeader>
-              <CardFooter className="flex justify-between items-center pt-2">
-                <div className="flex items-center text-sm text-muted-foreground">
-                  <Users className="h-4 w-4 mr-1.5" />
+              <CardFooter className="flex justify-between items-center pt-2 px-4 pb-3">
+                <div className="flex items-center text-xs text-muted-foreground">
+                  <Users className="h-3.5 w-3.5 mr-1" />
                   <span>{community.membersCount?.toLocaleString() || 0}</span>
                 </div>
                 <Button 
                   variant={joinedCommunityIds.includes(community.id) ? 'outline' : 'default'}
                   size="sm"
                   onClick={() => handleJoinCommunity(community.id)}
-                  className="transition-all"
+                  className="h-8 px-3 text-xs rounded-sm transition-all"
                 >
                   {joinedCommunityIds.includes(community.id) ? 'Joined' : 'Join'}
                 </Button>
