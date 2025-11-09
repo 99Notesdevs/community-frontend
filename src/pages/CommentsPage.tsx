@@ -8,7 +8,42 @@ import { formatDistanceToNow } from 'date-fns';
 import { MessageCircle, ArrowLeft } from 'lucide-react';
 import { api } from '@/api/route';
 import VotingSystem from '@/components/posts/VotingSystem';
+import PostCard from '@/components/posts/PostCard';
+interface PollOption {
+  id: string;
+  text: string;
+  voteCount: number;
+  voted: boolean;
+}
 
+interface Poll {
+  id: string;
+  question: string;
+  options: PollOption[];
+  totalVotes: number;
+  hasVoted: boolean;
+  endsAt?: Date;
+  isExpired: boolean;
+  pollOptionId?: string;
+}
+
+interface Post {
+  id: string;
+  title: string;
+  content: string;
+  type: 'TEXT' | 'IMAGE' | 'LINK' | 'POLL';
+  author: string;
+  authorId: string;
+  community: string;
+  communityIcon: string;
+  createdAt: Date;
+  votesCount: number;
+  commentsCount: number;
+  imageUrl?: string;
+  link?: string;
+  isBookmarked?: boolean;
+  poll?: Poll;
+}
 interface Comment {
   id: number;
   content: string;
@@ -22,23 +57,10 @@ interface Comment {
   replies?: Comment[];
 }
 
-interface Post {
-  id: string;
-  title: string;
-  content: string;
-  author: string;
-  authorId: string;
-  community: string;
-  communityIcon: string;
-  createdAt: string;
-  votesCount: number;
-  commentsCount: number;
-  imageUrl?: string;
-  link?: string;
-}
 
 const CommentsPage: React.FC = () => {
-  const { postId } = useParams<{ postId: string }>();
+  const { id } = useParams<{ id: string }>();
+  const postId = parseInt(id);
   const [post, setPost] = useState<Post | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
@@ -318,26 +340,11 @@ const CommentsPage: React.FC = () => {
       {/* Post */}
       {post && (
         <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-6 mb-6">
-          <div className="flex items-center space-x-2 text-sm text-gray-500 mb-2">
-            <span>Posted by u/{post.author || 'Unknown'}</span>
-            <span>•</span>
-            <span>{formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}</span>
-          </div>
-          <h1 className="text-2xl font-bold mb-4">{post.title}</h1>
-          <p className="whitespace-pre-line mb-4">{post.content}</p>
-          {post.imageUrl && (
-            <div className="my-4">
-              <img 
-                src={post.imageUrl} 
-                alt="Post" 
-                className="max-h-96 w-auto rounded-md object-cover"
-              />
-            </div>
-          )}
+          <PostCard post={post} />
           <div className="flex items-center space-x-4 text-sm text-gray-500">
             <div className="flex items-center space-x-1">
               <MessageCircle className="h-4 w-4" />
-              <span>{comments?.length || 0} comments</span>
+              <span>{post.commentsCount || 0} comments</span>
             </div>
           </div>
         </div>

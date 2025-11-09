@@ -70,31 +70,36 @@ export function CreateCommunityModal({ isOpen, onClose }: { isOpen: boolean; onC
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-xl font-bold">Create a Community</DialogTitle>
+      <DialogContent className="sm:max-w-[500px] max-h-[85vh] overflow-y-auto rounded-md">
+        <DialogHeader className="border-b pb-3">
+          <DialogTitle className="text-lg font-semibold">Create Community</DialogTitle>
         </DialogHeader>
         
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between my-4 px-4">
           {[1, 2, 3, 4].map((step) => (
-            <div key={step} className="flex flex-col items-center">
+            <div key={step} className="flex flex-col items-center flex-1">
               <div 
-                className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                  currentStep >= step ? 'bg-primary text-white' : 'bg-muted'
+                className={`w-7 h-7 rounded-sm flex items-center justify-center text-sm font-medium transition-colors ${
+                  currentStep >= step 
+                    ? 'bg-primary text-white' 
+                    : 'bg-muted text-muted-foreground/70'
                 }`}
               >
                 {step}
               </div>
-              <span className="text-xs mt-1">
+              <span className="text-xs mt-1.5 text-muted-foreground">
                 {['Details', 'Images', 'Settings', 'Rules'][step - 1]}
               </span>
+              {step < 4 && (
+                <div className="h-px bg-border flex-1 mx-2 mt-3.5" />
+              )}
             </div>
           ))}
         </div>
 
         {/* Step 1: Basic Information */}
         {currentStep === 1 && (
-          <div className="space-y-4">
+          <div className="space-y-5 px-1 py-2">
             <div>
               <Label htmlFor="name">Name</Label>
               <Input
@@ -103,7 +108,7 @@ export function CreateCommunityModal({ isOpen, onClose }: { isOpen: boolean; onC
                 value={formData.name}
                 onChange={handleInputChange}
                 placeholder="r/community_name"
-                className="mt-1"
+                className="mt-1.5 text-sm h-9 rounded-sm"
                 required
               />
               <p className="text-xs text-muted-foreground mt-1">
@@ -119,7 +124,7 @@ export function CreateCommunityModal({ isOpen, onClose }: { isOpen: boolean; onC
                 value={formData.displayName}
                 onChange={handleInputChange}
                 placeholder="Community Name"
-                className="mt-1"
+                className="mt-1.5 text-sm h-9 rounded-sm"
                 required
               />
             </div>
@@ -132,7 +137,7 @@ export function CreateCommunityModal({ isOpen, onClose }: { isOpen: boolean; onC
                 value={formData.description}
                 onChange={handleInputChange}
                 placeholder="What's your community about?"
-                className="mt-1"
+                className="mt-1.5 text-sm h-9 rounded-sm"
                 rows={3}
               />
             </div>
@@ -166,7 +171,7 @@ export function CreateCommunityModal({ isOpen, onClose }: { isOpen: boolean; onC
                     className="hidden"
                     id="icon-upload"
                   />
-                  <Button variant="outline" asChild>
+                  <Button variant="outline" size="sm" asChild className="rounded-sm">
                     <label htmlFor="icon-upload" className="cursor-pointer">
                       Upload Icon
                     </label>
@@ -267,7 +272,7 @@ export function CreateCommunityModal({ isOpen, onClose }: { isOpen: boolean; onC
 
         {/* Step 4: Rules */}
         {currentStep === 4 && (
-          <div className="space-y-4">
+          <div className="space-y-5 px-1 py-2">
             <p className="text-sm text-muted-foreground">
               Set rules for your community. You can add more rules later.
             </p>
@@ -293,7 +298,7 @@ export function CreateCommunityModal({ isOpen, onClose }: { isOpen: boolean; onC
                     value={rule.title}
                     onChange={(e) => handleRuleChange(index, 'title', e.target.value)}
                     placeholder="e.g. No spam"
-                    className="mt-1"
+                    className="mt-1.5 text-sm h-9 rounded-sm"
                   />
                 </div>
                 <div>
@@ -302,7 +307,7 @@ export function CreateCommunityModal({ isOpen, onClose }: { isOpen: boolean; onC
                     value={rule.description}
                     onChange={(e) => handleRuleChange(index, 'description', e.target.value)}
                     placeholder="Detailed description of the rule"
-                    className="mt-1"
+                    className="mt-1.5 text-sm h-9 rounded-sm"
                     rows={2}
                   />
                 </div>
@@ -320,14 +325,21 @@ export function CreateCommunityModal({ isOpen, onClose }: { isOpen: boolean; onC
           </div>
         )}
 
-        <div className="flex justify-between mt-8">
+        <div className="flex justify-between mt-8 pt-4 border-t">
           <Button
-            variant="outline"
-            onClick={currentStep === 1 ? onClose : handlePrev}
+            variant="ghost"
+            size="sm"
+            onClick={handlePrev}
+            disabled={currentStep === 1}
+            className="rounded-sm"
           >
-            {currentStep === 1 ? 'Cancel' : 'Back'}
+            Back
           </Button>
-          <Button onClick={handleNext}>
+          <Button 
+            size="sm" 
+            onClick={handleNext}
+            className="rounded-sm"
+          >
             {currentStep === 4 ? 'Create Community' : 'Continue'}
           </Button>
         </div>
