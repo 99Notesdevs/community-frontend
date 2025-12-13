@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Search, MessageSquare, Hash } from 'lucide-react';
+import { Search, MessageSquare, Hash, Filter } from 'lucide-react';
 import PostCard from '@/components/posts/PostCard';
 import { api } from '@/api/route';
 import { Link } from 'react-router-dom';
@@ -83,25 +83,29 @@ const ExplorePage = () => {
   );
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-6">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center space-x-3">
-          <Search className="h-6 w-6 text-primary" />
-          <h1 className="text-2xl font-bold">Explore</h1>
+    <div className="max-w-5xl mx-auto px-4 py-8">
+      <div className="mb-8">
+        {/* Search Bar */}
+        <div className="relative flex items-center gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+            <input
+              type="text"
+              placeholder="Search posts, communities, and users..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 text-foreground bg-card border border-border rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200 outline-none"
+            />
+          </div>
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className="flex items-center space-x-2 px-4 py-3 bg-card hover:bg-muted/50 border border-border rounded-lg transition-all duration-200"
+            aria-label="Toggle filters"
+          >
+            <Filter className="h-5 w-5 text-muted-foreground" />
+            <span className="font-medium">Filters</span>
+          </button>
         </div>
-      </div>
-
-      {/* Search Bar */}
-      <div className="relative mb-6">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-        <input
-          type="text"
-          placeholder="Search posts, communities, and users..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="form-input pl-10 pr-4 text-lg h-12"
-        />
       </div>
 
       {/* Tab Navigation */}
@@ -124,6 +128,7 @@ const ExplorePage = () => {
         >
           <Hash className="h-4 w-4" />
           <span>Communities ({loading.communities ? '...' : filteredCommunities.length})</span>
+
         </button>
       </div>
 

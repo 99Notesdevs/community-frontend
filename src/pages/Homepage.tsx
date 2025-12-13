@@ -139,80 +139,127 @@ const Homepage = () => {
     }
   });
 
+  // Skeleton loader component
+  const SkeletonPost = () => (
+    <div className="bg-card border border-border/50 p-4 mb-3 animate-pulse">
+      <div className="flex items-center space-x-2.5 mb-3">
+        <div className="w-7 h-7 rounded-full bg-muted"></div>
+        <div className="space-y-1.5">
+          <div className="h-3 w-20 bg-muted"></div>
+          <div className="h-2.5 w-12 bg-muted"></div>
+        </div>
+      </div>
+      <div className="space-y-2 mb-3">
+        <div className="h-4 w-3/4 bg-muted"></div>
+        <div className="h-3.5 w-full bg-muted"></div>
+        <div className="h-3.5 w-5/6 bg-muted"></div>
+      </div>
+      <div className="flex items-center justify-between pt-3 border-t border-border/50">
+        <div className="flex space-x-3">
+          <div className="h-7 w-14 bg-muted"></div>
+          <div className="h-7 w-14 bg-muted"></div>
+        </div>
+        <div className="h-7 w-16 bg-muted"></div>
+      </div>
+    </div>
+  );
+
   if (loading) {
-    return <div className="max-w-4xl mx-auto px-4 py-6">Loading posts...</div>;
+    return (
+      <div className="max-w-3xl mx-auto px-4 py-8">
+        <div className="animate-pulse mb-8">
+          <div className="h-12 bg-muted rounded-lg mb-6"></div>
+          <div className="flex justify-between items-center mb-6">
+            <div className="flex space-x-2">
+              <div className="h-10 w-24 bg-muted rounded-lg"></div>
+              <div className="h-10 w-24 bg-muted rounded-lg"></div>
+            </div>
+            <div className="flex space-x-2">
+              <div className="h-10 w-20 bg-muted rounded-lg"></div>
+              <div className="h-10 w-20 bg-muted rounded-lg"></div>
+              <div className="h-10 w-20 bg-muted rounded-lg"></div>
+            </div>
+          </div>
+        </div>
+        {[...Array(3)].map((_, i) => (
+          <SkeletonPost key={i} />
+        ))}
+      </div>
+    );
   }
 
   if (error) {
-    return <div className="max-w-4xl mx-auto px-4 py-6 text-red-500">{error}</div>;
+    return (
+      <div className="max-w-3xl mx-auto px-4 py-8">
+        <div className="bg-destructive/10 border border-destructive/30 text-destructive p-6 rounded-xl text-center">
+          <h3 className="font-medium text-lg mb-2">Something went wrong</h3>
+          <p className="text-sm mb-4">{error}</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-destructive text-destructive-foreground rounded-lg text-sm font-medium hover:bg-destructive/90 transition-colors"
+          >
+            Try again
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-6">
-      <PostCreationBar />
-
-      <div className="flex items-center justify-between mb-6 border-b">
-        <div className="flex space-x-2">
-          <button
-            onClick={() => setActiveTab('feed')}
-            className={`px-4 py-2 font-medium text-sm ${activeTab === 'feed'
-              ? 'border-b-2 border-primary text-primary'
-              : 'text-muted-foreground hover:text-foreground'}`}
-          >
-            Your Feed
-          </button>
-          <button
-            onClick={() => setActiveTab('saved')}
-            className={`px-4 py-2 font-medium text-sm flex items-center space-x-1 ${activeTab === 'saved'
-              ? 'border-b-2 border-primary text-primary'
-              : 'text-muted-foreground hover:text-foreground'}`}
-          >
-            <Bookmark className="h-4 w-4" />
-            <span>Saved</span>
-          </button>
-        </div>
-
-        <div className="flex items-center space-x-2">
-          <button
-            onClick={() => setSortBy('hot')}
-            className={`flex items-center space-x-2 px-3 py-1.5 rounded-lg text-sm ${
-              sortBy === 'hot' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'
-            }`}
-          >
-            <TrendingUp className="h-4 w-4" />
-            <span>Hot</span>
-          </button>
-
-          <button
-            onClick={() => setSortBy('new')}
-            className={`flex items-center space-x-2 px-3 py-1.5 rounded-lg text-sm ${
-              sortBy === 'new' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'
-            }`}
-          >
-            <Star className="h-4 w-4" />
-            <span>New</span>
-          </button>
-
-          <button
-            onClick={() => setSortBy('top')}
-            className={`flex items-center space-x-2 px-3 py-1.5 rounded-lg text-sm ${
-              sortBy === 'top' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'
-            }`}
-          >
-            <TrendingUp className="h-4 w-4" />
-            <span>Top</span>
-          </button>
-        </div>
+      <div className="mb-6">
+        <PostCreationBar />
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-3">
         {sortedPosts.length > 0 ? (
-          sortedPosts.map((post) => (
-            <PostCard key={post.id} post={post} />
-          ))
+          <div className="space-y-3">
+            {sortedPosts.map((post) => (
+              <div 
+                key={post.id} 
+                className="bg-card border border-border/50 hover:border-border transition-colors duration-200"
+              >
+                <PostCard post={post} />
+              </div>
+            ))}
+          </div>
         ) : (
-          <div className="text-center py-8 text-muted-foreground">
-            No posts found. Be the first to create one!
+          <div className="bg-card border border-dashed border-border/50 p-8 text-center">
+            <div className="mx-auto w-12 h-12 flex items-center justify-center mb-3">
+              {activeTab === 'saved' ? (
+                <Bookmark className="h-6 w-6 text-muted-foreground" />
+              ) : (
+                <svg 
+                  className="h-6 w-6 text-muted-foreground" 
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  stroke="currentColor"
+                >
+                  <path 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    strokeWidth="2" 
+                    d="M12 4v16m8-8H4" 
+                  />
+                </svg>
+              )}
+            </div>
+            <h3 className="text-base font-medium text-foreground mb-1">
+              {activeTab === 'saved' ? 'No saved posts' : 'No posts yet'}
+            </h3>
+            <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+              {activeTab === 'saved'
+                ? 'Posts you save will appear here. Start exploring and save posts you want to come back to later.'
+                : 'Be the first to create a post and start the conversation!'}
+            </p>
+            {activeTab !== 'saved' && (
+              <button
+                onClick={() => document.querySelector('textarea')?.focus()}
+                className="mt-3 inline-flex items-center px-3.5 py-1.5 bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
+              >
+                Create Post
+              </button>
+            )}
           </div>
         )}
       </div>

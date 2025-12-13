@@ -76,60 +76,104 @@ export default function CommunityPage() {
     fetchData();
   }, [id]);
 
-  if (loading) return <div className="flex justify-center p-8">Loading...</div>;
-  if (error) return <div className="text-red-500 p-8">{error}</div>;
-  if (!community) return <div className="p-8">Community not found</div>;
+  if (loading) return <div className="flex justify-center p-8 text-foreground">Loading...</div>;
+  if (error) return <div className="text-red-500 dark:text-red-400 p-8">{error}</div>;
+  if (!community) return <div className="p-8 text-foreground">Community not found</div>;
 
   return (
-    <div className="flex flex-col">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
       {community && (
-        <>
-          {/* Banner */}
-          <div className="relative">
-            <img src={community.banner} alt="Community Banner" className="w-full h-48 object-cover" />
-            <div className="absolute -bottom-10 left-6 flex items-center space-x-4">
-              <img src={community.icon} alt="Community Icon" className="w-20 h-20 rounded-full border-4 border-white shadow-md" />
-              <div>
-                <h1 className="text-2xl font-bold">{community.name}</h1>
-                <p className="text-gray-600 text-sm">
-                  {community.members?.toLocaleString() || '0'} members • {community.online || '0'} online
+        <div className="space-y-6">
+          {/* Banner with improved layout */}
+          <div className="relative overflow-visible rounded-md shadow-sm">
+            <div className="aspect-w-16 aspect-h-6 bg-muted rounded-t-md overflow-hidden">
+              <img 
+                src={community.banner} 
+                alt="Community Banner" 
+                className="w-full h-40 sm:h-48 object-cover"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.src = 'https://via.placeholder.com/1200x300/f3f4f6/9ca3af?text=Community+Banner';
+                }}
+              />
+            </div>
+            <div className="relative z-10 px-4 sm:px-6 -mt-8 flex items-end space-x-3">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-card p-0.5 rounded-full shadow-md border-2 border-border overflow-hidden">
+                <img 
+                  src={community.icon} 
+                  alt="Community Icon" 
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.src = 'https://via.placeholder.com/100/3b82f6/ffffff?text=' + community.name.charAt(0).toUpperCase();
+                  }}
+                />
+              </div>
+              <div className="bg-card/90 backdrop-blur-sm px-4 py-2 rounded-md shadow-sm border border-border mb-2">
+                <h1 className="text-xl font-semibold text-foreground">{community.name}</h1>
+                <p className="text-xs text-muted-foreground">
+                  <span className="font-medium">{community.members?.toLocaleString() || '0'}</span> members • 
+                  <span className="text-green-500 dark:text-green-400 font-medium"> {community.online || '0'} online</span>
                 </p>
               </div>
             </div>
           </div>
 
-          {/* Page content */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 px-6 mt-16">
-            {/* Main posts area */}
-            <div className="md:col-span-2 space-y-4">
+          {/* Main content grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-8">
+            {/* Posts section */}
+            <div className="lg:col-span-2 space-y-4">
               {posts.length > 0 ? (
-                posts.map(post => (
-                  <PostCard key={post.id} post={post} />
-                ))
+                <div className="space-y-4">
+                  {posts.map(post => (
+                    <div key={post.id} className="transition-all duration-200 hover:shadow-sm rounded-lg overflow-hidden">
+                      <PostCard post={post} />
+                    </div>
+                  ))}
+                </div>
               ) : (
-                <div className="text-center py-8 text-gray-500">No posts yet in this community</div>
+                <div className="bg-card rounded-lg border p-8 text-center">
+                  <p className="text-muted-foreground">No posts yet in this community</p>
+                  <p className="text-sm text-muted-foreground/70 mt-1">Be the first to create a post!</p>
+                </div>
               )}
             </div>
 
-            {/* Sidebar with data & rules */}
-            <div className="bg-white border rounded-xl p-4 shadow space-y-4 h-fit sticky top-4">
-              <div>
-                <h3 className="font-semibold text-lg mb-2">About Community</h3>
-                <p className="text-sm text-gray-600">{community.description || 'No description available'}</p>
+            {/* Sidebar */}
+            <div className="space-y-6">
+              {/* About Card */}
+              <div className="bg-card border rounded-lg overflow-hidden">
+                <div className="bg-muted/50 px-4 py-3 border-b">
+                  <h3 className="font-medium text-foreground">About Community</h3>
+                </div>
+                <div className="p-4">
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    {community.description || 'No description available'}
+                  </p>
+                </div>
               </div>
+
+              {/* Rules Card */}
               {community.rules?.length > 0 && (
-                <div>
-                  <h3 className="font-semibold text-lg mb-2">Rules</h3>
-                  <ul className="text-sm text-gray-600 list-disc ml-5 space-y-1">
-                    {community.rules.map((rule, i) => (
-                      <li key={i}>{rule}</li>
-                    ))}
-                  </ul>
+                <div className="bg-card border rounded-lg overflow-hidden">
+                  <div className="bg-muted/50 px-4 py-3 border-b">
+                    <h3 className="font-medium text-foreground">Community Rules</h3>
+                  </div>
+                  <div className="p-4">
+                    <ul className="space-y-2">
+                      {community.rules.map((rule, i) => (
+                        <li key={i} className="flex items-start text-sm">
+                          <span className="text-muted-foreground/70 mr-2">•</span>
+                          <span className="text-muted-foreground">{rule}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 </div>
               )}
             </div>
           </div>
-        </>
+        </div>
       )}
     </div>
   );

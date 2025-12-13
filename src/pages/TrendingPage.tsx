@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import PostCard from '@/components/posts/PostCard';
 import { dummyPosts } from '@/data/dummyData';
-import { Clock, Calendar, TrendingUp } from 'lucide-react';
+import { Clock, Calendar, TrendingUp, MessageCircle, ArrowUp } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 const TrendingPage = () => {
   const [timeFilter, setTimeFilter] = useState<'hour' | 'day' | 'week' | 'month'>('day');
@@ -24,98 +25,63 @@ const TrendingPage = () => {
   const trendingPosts = getFilteredPosts();
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-6">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center space-x-3">
-          <TrendingUp className="h-6 w-6 text-primary" />
-          <h1 className="text-2xl font-bold">Trending Posts</h1>
+      <div className="mb-8">
+        <h1 className="text-2xl font-semibold text-foreground mb-6">Trending</h1>
+        <div className="inline-flex items-center p-0.5 bg-muted/20 rounded border border-border/50">
+          {[
+            { value: 'hour', label: 'Hour', icon: Clock },
+            { value: 'day', label: 'Today', icon: Calendar },
+            { value: 'week', label: 'Week', icon: Calendar },
+            { value: 'month', label: 'Month', icon: Calendar },
+          ].map(({ value, label, icon: Icon }) => (
+            <button
+              key={value}
+              onClick={() => setTimeFilter(value as any)}
+              className={cn(
+                'flex items-center space-x-2 px-4 py-2 text-sm font-medium transition-colors',
+                timeFilter === value
+                  ? 'bg-background text-foreground'
+                  : 'text-muted-foreground hover:text-foreground/90 hover:bg-muted/20'
+              )}
+            >
+              <Icon className="h-3.5 w-3.5" />
+              <span>{label}</span>
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Time Filter Controls */}
-      <div className="flex items-center space-x-2 mb-6 p-1 bg-muted rounded-lg w-fit">
-        <button
-          onClick={() => setTimeFilter('hour')}
-          className={`flex items-center space-x-2 px-4 py-2 rounded-md transition-smooth ${
-            timeFilter === 'hour' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
-          }`}
-        >
-          <Clock className="h-4 w-4" />
-          <span className="font-medium">Past Hour</span>
-        </button>
-        
-        <button
-          onClick={() => setTimeFilter('day')}
-          className={`flex items-center space-x-2 px-4 py-2 rounded-md transition-smooth ${
-            timeFilter === 'day' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
-          }`}
-        >
-          <Calendar className="h-4 w-4" />
-          <span className="font-medium">Today</span>
-        </button>
-        
-        <button
-          onClick={() => setTimeFilter('week')}
-          className={`flex items-center space-x-2 px-4 py-2 rounded-md transition-smooth ${
-            timeFilter === 'week' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
-          }`}
-        >
-          <Calendar className="h-4 w-4" />
-          <span className="font-medium">This Week</span>
-        </button>
-        
-        <button
-          onClick={() => setTimeFilter('month')}
-          className={`flex items-center space-x-2 px-4 py-2 rounded-md transition-smooth ${
-            timeFilter === 'month' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
-          }`}
-        >
-          <Calendar className="h-4 w-4" />
-          <span className="font-medium">This Month</span>
-        </button>
-      </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div className="bg-card p-4 rounded-lg border border-border">
-          <div className="text-2xl font-bold text-primary">{trendingPosts.length}</div>
-          <div className="text-sm text-muted-foreground">Trending Posts</div>
-        </div>
-        <div className="bg-card p-4 rounded-lg border border-border">
-          <div className="text-2xl font-bold text-primary">
-            {trendingPosts.reduce((sum, post) => sum + post.votes, 0)}
-          </div>
-          <div className="text-sm text-muted-foreground">Total Votes</div>
-        </div>
-        <div className="bg-card p-4 rounded-lg border border-border">
-          <div className="text-2xl font-bold text-primary">
-            {trendingPosts.reduce((sum, post) => sum + post.comments, 0)}
-          </div>
-          <div className="text-sm text-muted-foreground">Total Comments</div>
-        </div>
-      </div>
 
       {/* Trending Posts */}
-      <div className="space-y-4">
+      <div className="space-y-5">
         {trendingPosts.length > 0 ? (
           trendingPosts.map((post, index) => (
-            <div key={post.id} className="relative">
+            <div key={post.id} className="relative group">
               {/* Trending rank */}
-              <div className="absolute -left-2 top-4 bg-primary text-primary-foreground text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center z-10">
+              <div className={cn(
+                "absolute -left-1 top-5 w-5 h-5 flex items-center justify-center text-xs font-medium transition-colors",
+                index < 3 
+                  ? 'text-amber-600'
+                  : 'text-muted-foreground/60'
+              )}>
                 {index + 1}
               </div>
-              <PostCard post={post} />
+              <div className="ml-4">
+                <PostCard post={post} />
+              </div>
             </div>
           ))
         ) : (
-          <div className="text-center py-12">
-            <TrendingUp className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-muted-foreground mb-2">
+          <div className="text-center py-12 border border-dashed border-border/50 rounded bg-muted/10">
+            <TrendingUp className="h-8 w-8 text-muted-foreground/50 mx-auto mb-3" />
+            <h3 className="text-base font-medium text-foreground mb-1">
               No trending posts found
             </h3>
-            <p className="text-muted-foreground">
-              Try a different time period to see more posts
+            <p className="text-muted-foreground text-sm">
+              Try a different time period
             </p>
           </div>
         )}

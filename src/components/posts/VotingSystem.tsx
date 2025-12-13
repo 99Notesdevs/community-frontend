@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronUp, ChevronDown } from 'lucide-react';
+import { ChevronUp, ChevronDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { api } from '@/api/route';
 
@@ -40,7 +40,7 @@ const VotingSystem = ({
       
       const response = await api.post(endpoint, { voteType });
       
-      if (response.success) {
+      if (response) {
         // Update local state
         let newVotes = votes;
         
@@ -66,65 +66,66 @@ const VotingSystem = ({
     }
   };
 
-  const formatVotes = (count: number) => {
-    if (Math.abs(count) >= 1000000) {
-      return (count / 1000000).toFixed(1) + 'M';
+  const formatVotes = (count: number | undefined | null) => {
+    const num = count || 0;
+    if (Math.abs(num) >= 1000000) {
+      return (num / 1000000).toFixed(1) + 'M';
     }
-    if (Math.abs(count) >= 1000) {
-      return (count / 1000).toFixed(1) + 'K';
+    if (Math.abs(num) >= 1000) {
+      return (num / 1000).toFixed(1) + 'K';
     }
-    return count.toString();
+    return num.toString();
   };
 
   const sizeClasses = {
-    sm: 'w-6 h-6',
-    md: 'w-8 h-8',
-    lg: 'w-10 h-10'
+    sm: 'w-5 h-5',
+    md: 'w-6 h-6',
+    lg: 'w-8 h-8'
   };
 
   const iconSizeClasses = {
-    sm: 'h-3 w-3',
-    md: 'h-4 w-4',
-    lg: 'h-5 w-5'
+    sm: 'h-2.5 w-2.5',
+    md: 'h-3 w-3',
+    lg: 'h-4 w-4'
   };
 
   return (
     <div className={cn(
-      "flex items-center",
-      orientation === 'vertical' ? "flex-col space-y-1" : "flex-row space-x-2"
+      "flex items-center bg-transparent",
+      orientation === 'vertical' ? "flex-col space-y-0.5" : "flex-row space-x-0.5"
     )}>
       <button
         onClick={() => handleVote('up')}
         disabled={isLoading}
         className={cn(
-          "vote-button hover:text-vote-upvote transition-colors disabled:opacity-50",
+          "p-1 rounded-sm hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors disabled:opacity-40",
+          userVote === 'up' ? 'text-orange-500' : 'text-gray-500/90 dark:text-gray-400/90',
           sizeClasses[size],
-          userVote === 'up' ? "text-vote-upvote" : "text-muted-foreground"
         )}
-        aria-label="Upvote"
       >
-        <ChevronUp className={iconSizeClasses[size]} />
+        <ArrowUp className={cn(iconSizeClasses[size], 'stroke-[3px]')} />
       </button>
       
       <span className={cn(
-        "font-bold transition-smooth select-none",
-        votes > 0 ? "text-vote-upvote" : votes < 0 ? "text-vote-downvote" : "text-muted-foreground",
-        size === 'sm' ? "text-xs" : size === 'md' ? "text-sm" : "text-base"
+        "font-medium text-center min-w-[20px] text-xs text-gray-600 dark:text-gray-300",
+        size === 'sm' ? 'text-[11px]' : size === 'md' ? 'text-xs' : 'text-sm',
+        "select-none"
       )}>
         {formatVotes(votes)}
       </span>
+      
+      <div className="border-t border-gray-200 dark:border-gray-700 w-3.5 mx-auto my-0.5"></div>
       
       <button
         onClick={() => handleVote('down')}
         disabled={isLoading}
         className={cn(
-          "vote-button hover:text-vote-downvote transition-colors disabled:opacity-50",
+          "p-1 rounded-sm hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors disabled:opacity-40",
+          userVote === 'down' ? 'text-blue-500' : 'text-gray-500/90 dark:text-gray-400/90',
           sizeClasses[size],
-          userVote === 'down' ? "text-vote-downvote" : "text-muted-foreground"
         )}
-        aria-label="Downvote"
       >
-        <ChevronDown className={iconSizeClasses[size]} />
+        <ArrowDown className={cn(iconSizeClasses[size], 'stroke-[3px]')} />
       </button>
     </div>
   );
