@@ -108,6 +108,18 @@ const ExplorePage = () => {
         </div>
       </div>
 
+      {/* Search Bar */}
+      <div className="relative mb-6">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+        <input
+          type="text"
+          placeholder="Search posts, communities, and users..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="form-input pl-10 pr-4 text-lg h-12"
+        />
+      </div>
+
       {/* Tab Navigation */}
       <div className="flex space-x-1 mb-6 p-1 bg-muted rounded-lg w-fit">
         <button
