@@ -67,7 +67,7 @@ const PostCreationBar = () => {
       url?: string;
       imageUrl?: string;
       videoUrl?: string;
-      pollOptions?: Array<{ text: string }>;
+      pollOptions?: Array<string>;
     } = {
       communityId: selectedCommunity.id,
       title: title.trim(),
@@ -93,7 +93,7 @@ const PostCreationBar = () => {
 
       payload.imageUrl = upload;
     } else if (postType === 'POLL') {
-      payload.pollOptions = pollOptions.filter(opt => opt.text.trim());
+      payload.pollOptions = pollOptions.map(opt => opt.text.trim()).filter(text => text);
     }
 
     try {
@@ -128,13 +128,13 @@ const PostCreationBar = () => {
               placeholder="What's on your mind?"
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              className="min-h-[120px] w-full text-base p-4 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-transparent resize-none transition-all"
+              className="min-h-[80px] w-full text-sm p-2 border border-gray-100 dark:border-gray-700 rounded-md focus:ring-1 focus:ring-yellow-400 focus:border-transparent resize-none transition-all"
             />
           </div>
         );
       case 'IMAGE':
         return (
-          <div className="border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl p-6 text-center transition-colors hover:border-yellow-400 dark:hover:border-yellow-600">
+          <div className="border border-dashed border-gray-200 dark:border-gray-700 rounded-md p-3 text-center transition-colors hover:border-yellow-400 dark:hover:border-yellow-600">
             <Input
               type="file"
               accept="image/*"
@@ -195,7 +195,7 @@ const PostCreationBar = () => {
                 placeholder="Paste URL here"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
-                className="w-full pl-10 py-3 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
+                className="w-full pl-8 py-1.5 text-sm border border-gray-100 dark:border-gray-700 rounded-md focus:ring-1 focus:ring-yellow-400 focus:border-transparent"
               />
             </div>
             <div className="mt-2">
@@ -203,7 +203,7 @@ const PostCreationBar = () => {
                 placeholder="Add a comment (optional)"
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
-                className="min-h-[100px] w-full text-base p-4 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-transparent resize-none"
+                className="min-h-[60px] w-full text-sm p-2 border border-gray-100 dark:border-gray-700 rounded-md focus:ring-1 focus:ring-yellow-400 focus:border-transparent resize-none"
               />
             </div>
             {url && (
@@ -287,26 +287,26 @@ const PostCreationBar = () => {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm mb-4 overflow-hidden">
+    <div className="bg-white dark:bg-gray-900 rounded-md border border-gray-100 dark:border-gray-800 shadow-xs hover:shadow-sm transition-shadow mb-3 overflow-hidden">
       {/* Header with community selection */}
-      <div className="px-4 pt-3 pb-2 border-b border-gray-100 dark:border-gray-800">
+      <div className="px-3 pt-1.5 pb-1 border-b border-gray-50 dark:border-gray-800">
         <div className="flex items-center">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button 
                 variant="ghost" 
-                className="flex items-center gap-2 px-3 py-1.5 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 rounded-full transition-colors"
+                className="flex items-center gap-1.5 px-2.5 py-1 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition-colors text-sm"
               >
                 {selectedCommunity ? (
                   <>
-                    <div className="h-6 w-6 rounded-full bg-yellow-500 flex items-center justify-center text-white text-xs font-medium">
+                    <div className="h-5 w-5 rounded-full bg-yellow-500 flex items-center justify-center text-white text-xs font-medium">
                       {selectedCommunity.name.charAt(0).toUpperCase()}
                     </div>
                     <span className="font-medium text-yellow-700 dark:text-yellow-400">r/{selectedCommunity.name}</span>
                   </>
                 ) : (
                   <>
-                    <div className="h-6 w-6 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+                    <div className="h-5 w-5 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
                       <Users className="h-3.5 w-3.5 text-gray-500" />
                     </div>
                     <span className="font-medium text-gray-500">Choose community</span>
@@ -316,7 +316,7 @@ const PostCreationBar = () => {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent 
-              className="w-72 max-h-80 overflow-y-auto p-2 rounded-xl shadow-lg border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900"
+              className="w-64 max-h-72 overflow-y-auto p-1.5 rounded-md shadow-md border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 text-sm"
               align="start"
               sideOffset={8}
             >
@@ -325,7 +325,7 @@ const PostCreationBar = () => {
                 <DropdownMenuItem
                   key={community.id}
                   onClick={() => setSelectedCommunity(community)}
-                  className="flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer"
+                  className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer text-sm"
                 >
                   <div className="h-8 w-8 rounded-full bg-yellow-500 flex-shrink-0 flex items-center justify-center text-white text-sm font-medium">
                     {community.name.charAt(0).toUpperCase()}
@@ -351,16 +351,18 @@ const PostCreationBar = () => {
           onValueChange={(value) => setPostType(value.toUpperCase() as PostType)}
           className="w-full"
         >
-          <TabsList className="grid w-full grid-cols-4 bg-transparent p-0 border-b border-gray-100 dark:border-gray-800 rounded-none">
+          <TabsList 
+            className="w-full grid-cols-4 bg-transparent p-0 border-b border-gray-50 dark:border-gray-800 rounded-none gap-0.5"
+          >
             <TabsTrigger 
               value="text" 
-              className="py-3 px-1 rounded-none border-b-2 border-transparent data-[state=active]:border-yellow-500 data-[state=active]:bg-transparent data-[state=active]:shadow-none"
+              className="py-2 px-1 text-sm rounded-none border-b-2 border-transparent data-[state=active]:border-yellow-500 data-[state=active]:bg-transparent data-[state=active]:shadow-none font-normal data-[state=active]:font-medium"
             >
               <span className="text-sm font-medium">Post</span>
             </TabsTrigger>
             <TabsTrigger 
               value="image"
-              className="py-3 px-1 rounded-none border-b-2 border-transparent data-[state=active]:border-yellow-500 data-[state=active]:bg-transparent data-[state=active]:shadow-none"
+              className="py-2 px-1 text-sm rounded-none border-b-2 border-transparent data-[state=active]:border-yellow-500 data-[state=active]:bg-transparent data-[state=active]:shadow-none font-normal data-[state=active]:font-medium"
             >
               <span className="text-sm font-medium">Image</span>
             </TabsTrigger>
@@ -381,13 +383,13 @@ const PostCreationBar = () => {
       </div>
 
       {/* Title and Content */}
-      <div className="px-4 py-3">
+      <div className="px-3 py-1.5">
         <div className="mb-4">
           <Input
             placeholder="Title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="w-full text-lg font-medium p-3 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all"
+            className="w-full text-base font-normal p-2.5 border border-gray-100 dark:border-gray-700 rounded-md focus:ring-1 focus:ring-yellow-400 focus:border-transparent transition-all"
           />
         </div>
 
@@ -398,11 +400,11 @@ const PostCreationBar = () => {
       </div>
 
       {/* Footer with Submit Button */}
-      <div className="px-4 py-3 border-t border-gray-100 dark:border-gray-800 flex justify-end">
+      <div className="px-3 py-1 border-t border-gray-50 dark:border-gray-800 flex justify-end">
         <Button 
           onClick={handleSubmit}
           disabled={!selectedCommunity || !title.trim() || isSubmitting}
-          className="rounded-full px-6 font-medium h-9 bg-yellow-500 hover:bg-yellow-600 text-white disabled:opacity-50 disabled:pointer-events-none transition-colors"
+          className="rounded-md px-3 text-xs font-medium h-7 bg-yellow-500 hover:bg-yellow-600 text-white disabled:opacity-50 disabled:pointer-events-none transition-colors"
         >
           {isSubmitting ? 'Posting...' : 'Post'}
         </Button>

@@ -1,4 +1,4 @@
-import { Home, TrendingUp, Search, MessageSquare, Users, Plus, Hash } from 'lucide-react';
+import { Home, TrendingUp, Search, MessageSquare, Users, Plus, Hash, Bookmark } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useEffect, useState } from 'react';
@@ -40,6 +40,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
     { name: 'Trending', href: '/trending', icon: TrendingUp },
     { name: 'Explore', href: '/explore', icon: Search },
     { name: 'Messages', href: '/messages', icon: MessageSquare },
+    { name: 'Bookmarks', href: '/bookmarks', icon: Bookmark },
     { name: 'Communities', href: '/communities', icon: Users },
   ];
 
@@ -87,7 +88,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
       
       {/* Sidebar */}
       <aside className={cn(
-        "fixed left-0 top-16 h-[calc(100vh-4rem)] w-64 bg-white dark:bg-gray-900 border-r border-sidebar-border dark:border-gray-700 z-40 transition-transform duration-300 overflow-y-auto",
+        "fixed left-0 top-16 h-[calc(100vh-4rem)] w-64 bg-background/95 dark:bg-gray-900/95 backdrop-blur-md border-r border-border/20 dark:border-border/30 z-40 transition-transform duration-300 overflow-y-auto shadow-[2px_0_8px_rgba(0,0,0,0.02)] dark:shadow-[2px_0_8px_rgba(0,0,0,0.1)]",
         isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
       )}>
         <div className="p-4 space-y-6">
@@ -142,7 +143,13 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
                   onClick={onClose}
                   className="flex items-center px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200 group"
                 >
-                  <span className="text-lg mr-3">{community.icon}</span>
+                  {community.iconUrl ? (
+                    <img src={community.iconUrl} alt={community.name} className="w-5 h-5 rounded-full mr-3" />
+                  ) : (
+                    <div className="w-5 h-5 rounded-full bg-gray-200 dark:bg-gray-700 mr-3 flex items-center justify-center">
+                      <span className="text-xs">{community.name.charAt(0).toUpperCase()}</span>
+                    </div>
+                  )}
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-medium truncate">
                       {community.name}

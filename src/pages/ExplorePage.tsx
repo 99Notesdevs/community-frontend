@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Search, MessageSquare, Hash } from 'lucide-react';
+import { Search, MessageSquare, Hash, Filter } from 'lucide-react';
 import PostCard from '@/components/posts/PostCard';
 import { api } from '@/api/route';
 import { Link } from 'react-router-dom';

@@ -24,7 +24,7 @@ const Navbar = ({ onToggleSidebar, isSidebarOpen }: NavbarProps) => {
     navigate('/');
   };
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border/40 shadow-sm">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-b border-border/20 dark:border-border/30 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_1px_2px_-1px_rgba(0,0,0,0.05)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.1),0_1px_2px_-1px_rgba(0,0,0,0.05)]">
       <div className="flex items-center justify-between px-4 sm:px-6 h-16">
         {/* Left section */}
         <div className="flex items-center space-x-4">

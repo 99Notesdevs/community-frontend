@@ -78,53 +78,54 @@ const VotingSystem = ({
   };
 
   const sizeClasses = {
-    sm: 'w-6 h-6',
-    md: 'w-8 h-8',
-    lg: 'w-10 h-10'
+    sm: 'w-5 h-5',
+    md: 'w-6 h-6',
+    lg: 'w-8 h-8'
   };
 
   const iconSizeClasses = {
-    sm: 'h-3 w-3',
-    md: 'h-4 w-4',
-    lg: 'h-5 w-5'
+    sm: 'h-2.5 w-2.5',
+    md: 'h-3 w-3',
+    lg: 'h-4 w-4'
   };
 
   return (
     <div className={cn(
-      "flex items-center bg-gray-50 dark:bg-gray-800 rounded-lg p-1",
-      orientation === 'vertical' ? "flex-col space-y-1" : "flex-row space-x-1"
+      "flex items-center bg-transparent",
+      orientation === 'vertical' ? "flex-col space-y-0.5" : "flex-row space-x-0.5"
     )}>
       <button
         onClick={() => handleVote('up')}
         disabled={isLoading}
         className={cn(
-          "p-1.5 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors disabled:opacity-50",
-          userVote === 'up' ? 'text-orange-500' : 'text-gray-500 dark:text-gray-400',
+          "p-1 rounded-sm hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors disabled:opacity-40",
+          userVote === 'up' ? 'text-orange-500' : 'text-gray-500/90 dark:text-gray-400/90',
           sizeClasses[size],
         )}
       >
-        <ArrowUp className={cn(iconSizeClasses[size], 'stroke-2')} />
+        <ArrowUp className={cn(iconSizeClasses[size], 'stroke-[3px]')} />
       </button>
       
       <span className={cn(
-        "font-semibold text-center min-w-[24px] text-sm text-gray-700 dark:text-gray-200",
-        size === 'sm' ? 'text-xs' : size === 'md' ? 'text-sm' : 'text-base'
+        "font-medium text-center min-w-[20px] text-xs text-gray-600 dark:text-gray-300",
+        size === 'sm' ? 'text-[11px]' : size === 'md' ? 'text-xs' : 'text-sm',
+        "select-none"
       )}>
         {formatVotes(votes)}
       </span>
       
-      <div className="border-t border-gray-200 dark:border-gray-700 w-4 mx-auto my-1"></div>
+      <div className="border-t border-gray-200 dark:border-gray-700 w-3.5 mx-auto my-0.5"></div>
       
       <button
         onClick={() => handleVote('down')}
         disabled={isLoading}
         className={cn(
-          "p-1.5 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors disabled:opacity-50",
-          userVote === 'down' ? 'text-blue-500' : 'text-gray-500 dark:text-gray-400',
+          "p-1 rounded-sm hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors disabled:opacity-40",
+          userVote === 'down' ? 'text-blue-500' : 'text-gray-500/90 dark:text-gray-400/90',
           sizeClasses[size],
         )}
       >
-        <ArrowDown className={cn(iconSizeClasses[size], 'stroke-2')} />
+        <ArrowDown className={cn(iconSizeClasses[size], 'stroke-[3px]')} />
       </button>
     </div>
   );
