@@ -176,9 +176,9 @@ export const PostCard: React.FC<PostCardProps> = ({ post, onBookmarkToggle }) =>
     navigate(`/post/${post.id}`);
   };
 
-  const truncatedContent = post.content.length > 300 
+  const truncatedContent = post.content && post.content.length > 300 
     ? post.content.substring(0, 300) + '...' 
-    : post.content;
+    : post.content || '';
 
   const handleVote = async (pollOptionId: string) => {
     if (!pollState || pollState.hasVoted || isLoading) return;
@@ -263,7 +263,7 @@ export const PostCard: React.FC<PostCardProps> = ({ post, onBookmarkToggle }) =>
           <p className="whitespace-pre-wrap mb-2 leading-normal">
             {showFullContent ? post.content : truncatedContent}
           </p>
-          {post.content.length > 300 && (
+          {post.content && post.content.length > 300 && (
             <button
               onClick={() => setShowFullContent(!showFullContent)}
               className="text-primary hover:text-primary/80 text-xs font-medium mt-1 transition-colors duration-200"
