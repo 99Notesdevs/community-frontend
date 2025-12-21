@@ -99,8 +99,8 @@ export default function UserProfile() {
         
         console.log('Making API calls...');
         const [postsResponse, commentsResponse] = await Promise.all([
-          api.get<ApiResponse<Post[]>>(`/profile/profile-posts/${authUser.id}?skip=0&take=10`),
-          api.get<ApiResponse<Comment[]>>(`/profile/profile-comments/${authUser.id}?skip=0&take=10`),
+          api.get<ApiResponse<Post[]>>(`/profile/profile-posts/?userId=${authUser.id}&skip=0&take=10`),
+          api.get<ApiResponse<Comment[]>>(`/profile/profile-comments/?userId=${authUser.id}&skip=0&take=10`),
         ]) as [ApiResponse<Post[]>, ApiResponse<Comment[]>];
 
         console.log('API responses:', { postsResponse, commentsResponse });
@@ -132,9 +132,10 @@ export default function UserProfile() {
             karma: prev.karma + commentKarma
           }));
         }
-        } catch (err) {
+      } catch (err: any) {
         console.error('Error fetching profile data:', err);
-        setError('Failed to load profile data. Please try again later.');
+        const errorMessage = err.response?.data?.message || err.message || 'Failed to load profile data. Please try again later.';
+        setError(errorMessage);
       } finally {
         setLoading(false);
       }
