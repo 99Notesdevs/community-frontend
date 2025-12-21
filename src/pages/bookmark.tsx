@@ -18,16 +18,35 @@ export default function BookmarkPage() {
   useEffect(() => {
     const fetchBookmarkedPosts = async () => {
       try {
-        const response = await api.get<ApiResponse<Post[]>>('/bookmark/profile/bookmarks');
-        const responseData = response as unknown as ApiResponse<Post[]>;
-        
+        const response = await api.get('/bookmark/profile/bookmarks');
+        const responseData = response as unknown as ApiResponse<Array<{ post: any }>>;
+
         if (responseData.success) {
-          // Mark all posts as bookmarked since they come from the bookmarks endpoint
-          const postsWithBookmarkFlag = responseData.data.map((post: Post) => ({
-            ...post,
-            isBookmarked: true
-          }));
-          setBookmarkedPosts(postsWithBookmarkFlag);
+          // Transform the bookmarked posts to match the Post interface
+          const transformedPosts = responseData.data.map(item => {
+            const post = item.post;
+            return {
+              id: post.id,
+              title: post.title,
+              content: post.content,
+              type: post.type || 'TEXT',
+              author: post.author?.username || 'Anonymous',
+              authorId: post.authorId?.toString() || '0',
+              community: post.community?.name || 'Community',
+              communityIcon: post.community?.iconUrl || '',
+              createdAt: new Date(post.createdAt),
+              votesCount: post.votesCount || 0,
+              commentsCount: post.commentsCount || 0,
+              imageUrl: post.imageUrl,
+              link: post.link,
+              isBookmarked: true,
+              votes: post.votesCount || 0,
+              comments: post.commentsCount || 0,
+              ...(post.poll && { poll: post.poll })
+            };
+          });
+
+          setBookmarkedPosts(transformedPosts);
         } else {
           toast.error('Failed to load bookmarked posts');
         }
@@ -70,7 +89,7 @@ export default function BookmarkPage() {
 
   return (
     <div className="max-w-4xl mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-6">Your Bookmarked Posts</h1>
+      <h1 className="text-2xl font-bold mb-6">Bookmarks</h1>
       
       {bookmarkedPosts.length === 0 ? (
         <div className="text-center py-12">

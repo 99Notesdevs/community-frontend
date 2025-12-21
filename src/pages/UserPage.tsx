@@ -101,8 +101,8 @@ export default function UserPage() {
         
         // Fetch user details, posts, and comments in parallel
         const [commentsRes, postsRes] = await Promise.all([
-          api.get<ApiResponse<Comment[]>>(`/profile/profile-comments/${id}?skip=0&take=10`),
-          api.get<ApiResponse<Post[]>>(`/profile/profile-posts/${id}?skip=0&take=10`)
+          api.get<ApiResponse<Comment[]>>(`/profile/profile-comments/?userId=${id}&skip=0&take=10`),
+          api.get<ApiResponse<Post[]>>(`/profile/profile-posts/?userId=${id}&skip=0&take=10`)
         ]) as [ApiResponse<Comment[]>, ApiResponse<Post[]>];
         
 

@@ -144,10 +144,10 @@ export default function CommunityPage() {
               {/* About Card */}
               <div className="bg-card border rounded-lg overflow-hidden">
                 <div className="bg-muted/50 px-4 py-3 border-b">
-                  <h3 className="font-medium text-foreground">About Community</h3>
+                  <h3 className="font-medium text-foreground">About</h3>
                 </div>
-                <div className="p-4">
-                  <p className="text-sm text-muted-foreground leading-relaxed">
+                <div className="p-4 break-words overflow-hidden">
+                  <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
                     {community.description || 'No description available'}
                   </p>
                 </div>
