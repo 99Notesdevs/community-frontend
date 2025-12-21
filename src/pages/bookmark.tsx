@@ -18,7 +18,7 @@ export default function BookmarkPage() {
   useEffect(() => {
     const fetchBookmarkedPosts = async () => {
       try {
-        const response = await api.get<ApiResponse<Post[]>>('/profile/bookmarks');
+        const response = await api.get<ApiResponse<Post[]>>('/bookmark/profile/bookmarks');
         const responseData = response as unknown as ApiResponse<Post[]>;
         
         if (responseData.success) {

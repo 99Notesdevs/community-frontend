@@ -1,8 +1,31 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { useSocket } from '../contexts/SocketContext';
 import { useAuth } from '../contexts/AuthContext';
-import { Plus, MessageSquare } from 'lucide-react';
-import { useSearchParams } from 'react-router-dom';
+import { Plus, MessageSquare, ArrowLeft } from 'lucide-react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+
+// Breakpoints
+const BREAKPOINTS = {
+  sm: 640,    // Mobile
+  md: 768,    // Small tablets
+  lg: 1024,   // Tablets/Laptops
+  xl: 1280,   // Large desktops
+};
+
+// Custom hook to lock body scroll
+const useLockBodyScroll = (isLocked: boolean) => {
+  useLayoutEffect(() => {
+    const originalStyle = window.getComputedStyle(document.body).overflow;
+    
+    if (isLocked) {
+      document.body.style.overflow = 'hidden';
+    }
+    
+    return () => {
+      document.body.style.overflow = originalStyle;
+    };
+  }, [isLocked]);
+};
 
 interface Message {
   id: string;
@@ -23,6 +46,8 @@ interface Conversation {
 }
 
 export const MessagesPage: React.FC = () => {
+  // Lock body scroll when component mounts
+  useLockBodyScroll(true);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -32,8 +57,12 @@ export const MessagesPage: React.FC = () => {
   const [userIdInput, setUserIdInput] = useState('');
   const [searchParams, setSearchParams] = useSearchParams();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const { socket, isConnected } = useSocket();
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const [isMobileView, setIsMobileView] = useState(window.innerWidth < BREAKPOINTS.md);
+  const [showChat, setShowChat] = useState(false);
 
   // Check for userId in URL params (coming from PostCard)
   useEffect(() => {
@@ -86,6 +115,43 @@ export const MessagesPage: React.FC = () => {
 
     fetchConversations();
   }, []);
+
+  // Handle window resize for responsive behavior
+  useEffect(() => {
+    const handleResize = () => {
+      const isMobile = window.innerWidth < BREAKPOINTS.md;
+      setIsMobileView(isMobile);
+      
+      // If we're on desktop and chat was hidden, show it
+      if (!isMobile && !showChat) {
+        setShowChat(true);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    handleResize(); // Initial check
+    return () => window.removeEventListener('resize', handleResize);
+  }, [showChat]);
+
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+    }
+  }, [messages]);
+
+  // Handle conversation selection
+  const handleSelectConversation = (conversationId: string) => {
+    setSelectedConversation(conversationId);
+    if (isMobileView) {
+      setShowChat(true);
+    }
+  };
+
+  // Handle back to conversations list (mobile)
+  const handleBackToConversations = () => {
+    setShowChat(false);
+  };
 
   // Load messages
   useEffect(() => {
@@ -355,21 +421,30 @@ export const MessagesPage: React.FC = () => {
     );
   }
 
+  // Calculate the height to account for any fixed headers/navbars
+  const pageHeight = 'calc(100vh - 4rem)'; // Adjust 4rem based on your navbar height
+
   return (
-    <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Conversations sidebar */}
-      <div className="w-72 border-r border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 flex flex-col">
-        <div className="p-3 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center bg-white dark:bg-gray-900 sticky top-0 z-10">
+    <div className="relative flex h-screen overflow-hidden bg-white dark:bg-gray-900">
+      {/* Conversations sidebar - Always rendered but conditionally shown/hidden based on viewport */}
+      <div 
+        className={`${isMobileView && showChat ? 'hidden' : 'flex'} 
+                  lg:flex w-full lg:w-80 xl:w-96 border-r border-gray-200 dark:border-gray-800 
+                  bg-white dark:bg-gray-900 flex-col h-full overflow-hidden`}
+        style={{ height: pageHeight }}
+      >
+        <div className="p-3 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center bg-white dark:bg-gray-900 z-10 flex-shrink-0">
           <h1 className="text-lg font-medium text-gray-900 dark:text-gray-100">Messages</h1>
           <button
             onClick={() => setIsNewChatModalOpen(true)}
             className="p-1.5 rounded-md bg-blue-600 text-white hover:bg-blue-700 transition-colors"
             title="New conversation"
+            aria-label="New conversation"
           >
             <Plus className="h-4 w-4" />
           </button>
         </div>
-        <div className="overflow-y-auto flex-1">
+        <div className="overflow-y-auto flex-1 overflow-x-hidden">
           {conversations.map((conversation) => (
             <div
               key={conversation._id}
@@ -379,7 +454,7 @@ export const MessagesPage: React.FC = () => {
                   ? 'bg-blue-50 dark:bg-gray-800 border-l-2 border-l-blue-500'
                   : ''
               }`}
-              onClick={() => setSelectedConversation(conversation._id)}
+              onClick={() => handleSelectConversation(conversation._id)}
             >
               <div className="flex justify-between items-start">
                 <div className="font-medium text-sm text-gray-900 dark:text-gray-100">{getOtherParticipant(conversation)}</div>
@@ -454,11 +529,24 @@ export const MessagesPage: React.FC = () => {
       )}
 
       {/* Chat area */}
-      <div className="flex-1 flex flex-col bg-white dark:bg-gray-900 border-l border-gray-100 dark:border-gray-800">
+      <div 
+        className={`${isMobileView && !showChat ? 'hidden' : 'flex'} 
+                  flex-1 flex-col bg-white dark:bg-gray-900 border-l border-gray-100 dark:border-gray-800 h-full overflow-hidden`}
+        style={{ height: pageHeight }}
+      >
         {selectedConversation ? (
           <>
-            <div className="p-3 border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 sticky top-0 z-10">
+            <div className="p-3 border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 z-10 flex-shrink-0">
               <div className="flex items-center">
+                {isMobileView && (
+                  <button 
+                    onClick={handleBackToConversations}
+                    className="mr-2 p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                    aria-label="Back to conversations"
+                  >
+                    <ArrowLeft className="h-5 w-5 text-gray-600 dark:text-gray-300" />
+                  </button>
+                )}
                 <div className="h-8 w-8 rounded-md bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center text-blue-600 dark:text-blue-300 text-sm font-medium mr-2">
                   {getOtherParticipant(
                     conversations.find((c) => c._id === selectedConversation) || {
@@ -485,7 +573,11 @@ export const MessagesPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-3 space-y-4 bg-white dark:bg-gray-900">
+            <div 
+              ref={messagesContainerRef}
+              className="flex-1 overflow-y-auto p-3 space-y-4 bg-white dark:bg-gray-900 overflow-x-hidden"
+              style={{ scrollBehavior: 'smooth' }}
+            >
               {messageGroups.length > 0 ? (
                 messageGroups.map((group, groupIndex) => (
                   <div key={groupIndex} className="space-y-4">
@@ -545,43 +637,52 @@ export const MessagesPage: React.FC = () => {
               <div ref={messagesEndRef} />
             </div>
 
-            <form onSubmit={handleSendMessage} className="p-3 border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900">
-              <div className="relative">
-                <input
-                  type="text"
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  placeholder="Type a message..."
-                  className="w-full px-3 py-2 pr-10 text-sm border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-800 dark:text-gray-100"
-                />
-                <button
-                  type="submit"
-                  disabled={!newMessage.trim()}
-                  className={`absolute right-1.5 top-1/2 transform -translate-y-1/2 p-1.5 rounded ${
-                    newMessage.trim()
-                      ? 'text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-gray-700'
-                      : 'text-gray-300 dark:text-gray-600 cursor-not-allowed'
-                  } transition-colors`}
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-4 w-4"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
+            <form onSubmit={handleSendMessage} className="p-3 border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 flex-shrink-0">
+              <div className="max-w-3xl mx-auto w-full">
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    placeholder="Type a message..."
+                    className="w-full px-3 py-2 pr-10 text-sm border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-800 dark:text-gray-100"
+                  />
+                  <button
+                    type="submit"
+                    disabled={!newMessage.trim()}
+                    className={`absolute right-1.5 top-1/2 transform -translate-y-1/2 p-1.5 rounded ${
+                      newMessage.trim()
+                        ? 'text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-gray-700'
+                        : 'text-gray-300 dark:text-gray-600 cursor-not-allowed'
+                    } transition-colors`}
                   >
-                    <path
-                      fillRule="evenodd"
-                      d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </button>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-4 w-4"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </button>
+                </div>
               </div>
             </form>
           </>
         ) : (
-          <div className="flex-1 flex items-center justify-center text-gray-400 dark:text-gray-500 text-sm">
-            Select a conversation to start chatting
+          <div className="flex-1 flex flex-col items-center justify-center text-gray-400 dark:text-gray-500 p-4 text-center">
+            <MessageSquare className="h-12 w-12 mb-3 opacity-30" />
+            <p className="text-sm mb-2">Select a conversation to start chatting</p>
+            <button
+              onClick={() => setIsNewChatModalOpen(true)}
+              className="mt-2 text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium"
+            >
+              Start a new conversation
+            </button>
           </div>
         )}
       </div>
