@@ -6,30 +6,48 @@ import { api } from '@/api/route';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface Post {
-  id: string;
+  id: string | number;
   title: string;
   content: string;
   author: string;
-  authorId: string;
-  community: string;
-  communityIcon: string;
-  createdAt: Date;
-  votesCount: number;
-  commentsCount: number;
+  authorId: string | number;
+  community: string | { name: string; iconUrl: string; id?: number };
+  communityIcon?: string;
+  createdAt: Date | string;
+  votesCount?: number;
+  commentsCount?: number;
   imageUrl?: string;
   link?: string;
   isBookmarked?: boolean;
-  [key: string]: any; // for other properties we might not use directly
+  [key: string]: any;
 }
 
 const Homepage = () => {
   const [activeTab, setActiveTab] = useState<'feed' | 'saved'>('feed');
-  const [sortBy, setSortBy] = useState<'hot' | 'new' | 'top'>('hot');
+  const [sortBy, setSortBy] = useState<'hot' | 'new' | 'top'>('new');
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { isAuthenticated } = useAuth();
   const bookmarkedPostIdsRef = useRef<Set<string>>(new Set());
+
+  const handleNewPost = useCallback((newPost: Post) => {
+    // Format the new post to match our existing post structure
+    const formattedPost: Post = {
+      ...newPost,
+      id: newPost.id.toString(),
+      author: newPost.authorId?.toString() || 'Anonymous',
+      community: typeof newPost.community === 'object' ? newPost.community.name : newPost.community || 'Community',
+      communityIcon: (typeof newPost.community === 'object' ? newPost.community.iconUrl : '') || '',
+      votesCount: newPost.votesCount || 0,
+      commentsCount: newPost.commentsCount || 0,
+      createdAt: new Date(newPost.createdAt),
+      isBookmarked: false
+    };
+
+    // Add the new post to the beginning of the posts array
+    setPosts(prevPosts => [formattedPost, ...prevPosts]);
+  }, []);
 
   const fetchBookmarks = useCallback(async () => {
     if (!isAuthenticated) {
@@ -208,7 +226,7 @@ const Homepage = () => {
   return (
     <div className="max-w-4xl mx-auto px-4 py-6">
       <div className="mb-6">
-        <PostCreationBar />
+        <PostCreationBar onPostCreated={handleNewPost} />
       </div>
 
       <div className="space-y-3">
