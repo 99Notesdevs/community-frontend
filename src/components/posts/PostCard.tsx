@@ -10,6 +10,7 @@ import {
 import VotingSystem from './VotingSystem';
 import { formatDistanceToNow } from 'date-fns';
 import { api } from '@/api/route';
+import { ExternalLink as ExternalLinkIcon } from 'lucide-react';
 
 interface ApiResponse<T> {
   success: boolean;
@@ -25,17 +26,28 @@ export interface Post {
   type: 'TEXT' | 'IMAGE' | 'LINK' | 'POLL';
   author: string;
   authorId: string;
-  community: string;
-  communityIcon: string;
+  community: Community;
   createdAt: Date;
   votesCount: number;
   commentsCount: number;
   imageUrl?: string;
-  link?: string;
+  url?: string;
   isBookmarked?: boolean;
   poll?: Poll;
 }
-
+interface Community{
+  id: number;
+  name: string;
+  displayName:string,
+  description:string,
+  iconUrl:string,
+  bannerUrl:string,
+  type:string,
+  nsfw:boolean,
+  createdAt:Date,
+  updatedAt:Date,
+  ownerId: number;
+}
 interface PollOption {
   id: string;
   text: string;
@@ -69,72 +81,72 @@ export const PostCard: React.FC<PostCardProps> = ({ post, onBookmarkToggle }) =>
 
   // Fetch poll data if it's a poll post
   useEffect(() => {
-  const fetchPollData = async () => {
-    if (post.type === 'POLL' && post.id) {
-      try {
-        const [optionsRes, resultsRes] = await Promise.all([
-          api.get<ApiResponse<any>>(`/polls/options/${post.id}`),
-          api.get<ApiResponse<any>>(`/polls/results/${post.id}`)
-        ]);
-        
-        const optionsData = optionsRes as unknown as ApiResponse<any>;
-        const resultsData = resultsRes as unknown as ApiResponse<any>;
-        
-        if (optionsData.success && resultsData.success) {
-        // Get current user ID from your auth context or local storage
-        const currentUserId = 1; // Replace with actual user ID
-        
-        // Create a map of poll options with their vote counts and user's vote status
-        const optionsMap = new Map();
-        
-        // Process options response
-        optionsData.data.forEach((opt: any) => {
-          optionsMap.set(opt.id, {
-            id: opt.id.toString(),
-            text: opt.text,
-            voteCount: opt.votes,
-            voted: opt.voters.some((v: any) => v.userId === currentUserId)
-          });
-        });
-        
-        // Process results to update vote counts and check if user has voted
-        const options = resultsData.data.map((result: any) => {
-          const option = optionsMap.get(result.id) || {
-            id: result.id.toString(),
-            text: result.text,
-            voteCount: result.votes,
-            voted: false
-          };
-          
-          // Update with the most recent vote count
-          option.voteCount = result.votes;
-          option.voted = result.voters.some((v: any) => v.userId === currentUserId);
-          
-          return option;
-        });
+    const fetchPollData = async () => {
+      if (post.type === 'POLL' && post.id) {
+        try {
+          const [optionsRes, resultsRes] = await Promise.all([
+            api.get<ApiResponse<any>>(`/polls/options/${post.id}`),
+            api.get<ApiResponse<any>>(`/polls/results/${post.id}`)
+          ]);
 
-        const totalVotes = options.reduce((sum: number, opt: any) => sum + opt.voteCount, 0);
-        const hasVoted = options.some((opt: any) => opt.voted);
-        
-        setPollState({
-          id: post.id,
-          question: post.content,
-          options,
-          totalVotes,
-          hasVoted,
-          endsAt: post.poll?.endsAt ? new Date(post.poll.endsAt) : undefined,
-          isExpired: post.poll?.endsAt ? new Date(post.poll.endsAt) < new Date() : false
-        });
+          const optionsData = optionsRes as unknown as ApiResponse<any>;
+          const resultsData = resultsRes as unknown as ApiResponse<any>;
+
+          if (optionsData.success && resultsData.success) {
+            // Get current user ID from your auth context or local storage
+            const currentUserId = 1; // Replace with actual user ID
+
+            // Create a map of poll options with their vote counts and user's vote status
+            const optionsMap = new Map();
+
+            // Process options response
+            optionsData.data.forEach((opt: any) => {
+              optionsMap.set(opt.id, {
+                id: opt.id.toString(),
+                text: opt.text,
+                voteCount: opt.votes,
+                voted: opt.voters.some((v: any) => v.userId === currentUserId)
+              });
+            });
+
+            // Process results to update vote counts and check if user has voted
+            const options = resultsData.data.map((result: any) => {
+              const option = optionsMap.get(result.id) || {
+                id: result.id.toString(),
+                text: result.text,
+                voteCount: result.votes,
+                voted: false
+              };
+
+              // Update with the most recent vote count
+              option.voteCount = result.votes;
+              option.voted = result.voters.some((v: any) => v.userId === currentUserId);
+
+              return option;
+            });
+
+            const totalVotes = options.reduce((sum: number, opt: any) => sum + opt.voteCount, 0);
+            const hasVoted = options.some((opt: any) => opt.voted);
+
+            setPollState({
+              id: post.id,
+              question: post.content,
+              options,
+              totalVotes,
+              hasVoted,
+              endsAt: post.poll?.endsAt ? new Date(post.poll.endsAt) : undefined,
+              isExpired: post.poll?.endsAt ? new Date(post.poll.endsAt) < new Date() : false
+            });
+          }
+        } catch (error) {
+          console.error('Failed to fetch poll data:', error);
+          toast.error('Failed to load poll data');
+        }
       }
-    } catch (error) {
-      console.error('Failed to fetch poll data:', error);
-      toast.error('Failed to load poll data');
-    }
-  }
-};
+    };
 
-  fetchPollData();
-}, [post.id, post.type, post.content, post.poll?.endsAt]);
+    fetchPollData();
+  }, [post.id, post.type, post.content, post.poll?.endsAt]);
 
   const handleShare = () => {
     navigator.clipboard.writeText(`${window.location.origin}/post/${post.id}`);
@@ -176,62 +188,62 @@ export const PostCard: React.FC<PostCardProps> = ({ post, onBookmarkToggle }) =>
     navigate(`/post/${post.id}`);
   };
 
-  const truncatedContent = post.content && post.content.length > 300 
-    ? post.content.substring(0, 300) + '...' 
+  const truncatedContent = post.content && post.content.length > 300
+    ? post.content.substring(0, 300) + '...'
     : post.content || '';
 
   const handleVote = async (pollOptionId: string) => {
     if (!pollState || pollState.hasVoted || isLoading) return;
-    
+
     try {
       setIsLoading(true);
-      const response = await api.post<ApiResponse<{ success: boolean }>>('/polls/vote', { 
+      const response = await api.post<ApiResponse<{ success: boolean }>>('/polls/vote', {
         pollOptionId: parseInt(pollOptionId),
-        postId: post.id 
+        postId: post.id
       });
 
       const responseData = response as unknown as ApiResponse<{ success: boolean }>;
 
       if (responseData.success) {
-      // Update the local state to reflect the vote
-      const updatedOptions = pollState.options.map(opt => {
-        const isSelected = opt.id === pollOptionId;
-        return {
-          ...opt,
-          voteCount: isSelected ? opt.voteCount + 1 : opt.voteCount,
-          voted: isSelected
-        };
-      });
+        // Update the local state to reflect the vote
+        const updatedOptions = pollState.options.map(opt => {
+          const isSelected = opt.id === pollOptionId;
+          return {
+            ...opt,
+            voteCount: isSelected ? opt.voteCount + 1 : opt.voteCount,
+            voted: isSelected
+          };
+        });
 
-      setPollState(prev => ({
-        ...prev!,
-        options: updatedOptions,
-        hasVoted: true,
-        totalVotes: prev!.totalVotes + 1,
-        pollOptionId: pollOptionId
-      }));
-      
-      toast.success('Vote submitted successfully');
+        setPollState(prev => ({
+          ...prev!,
+          options: updatedOptions,
+          hasVoted: true,
+          totalVotes: prev!.totalVotes + 1,
+          pollOptionId: pollOptionId
+        }));
+
+        toast.success('Vote submitted successfully');
+      }
+    } catch (error) {
+      console.error('Failed to submit vote:', error);
+      toast.error('Failed to submit vote');
+    } finally {
+      setIsLoading(false);
     }
-  } catch (error) {
-    console.error('Failed to submit vote:', error);
-    toast.error('Failed to submit vote');
-  } finally {
-    setIsLoading(false);
-  }
-};
+  };
 
   return (
     <article className="post-card bg-card border border-border/30 rounded-md overflow-hidden shadow-xs hover:shadow-sm transition-all duration-200 mb-3 hover:bg-card/90 dark:hover:bg-card/90">
       <div className="p-4 transition-colors duration-200">
         {/* Header */}
         <div className="flex items-center space-x-2 text-xs text-muted-foreground mb-2">
-          <span className="text-lg">{post.communityIcon}</span>
-          <span className="font-medium text-foreground">{post.community}</span>
+          <span className="text-lg">{post.community.iconUrl}</span>
+          <span className="font-medium text-foreground">{post.community.displayName}</span>
           <span className="text-muted-foreground/50">•</span>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <span 
+              <span
                 className="hover:underline cursor-pointer hover:text-foreground"
                 onClick={(e) => e.stopPropagation()}
               >
@@ -272,12 +284,11 @@ export const PostCard: React.FC<PostCardProps> = ({ post, onBookmarkToggle }) =>
             </button>
           )}
         </div>
-
         {/* Image */}
         {post.imageUrl && (
           <div className="mb-3 rounded overflow-hidden border border-border">
-            <img 
-              src={post.imageUrl} 
+            <img
+              src={post.imageUrl}
               alt="Post image"
               className="w-full max-h-80 object-cover hover:opacity-95 transition-opacity duration-200"
               loading="lazy"
@@ -287,83 +298,80 @@ export const PostCard: React.FC<PostCardProps> = ({ post, onBookmarkToggle }) =>
 
         {/* Poll */}
         {post.type === 'POLL' && pollState && (
-  <div className="mb-4 border border-border rounded-lg p-4">
-    <h4 className="font-medium text-foreground mb-3">{pollState.question}</h4>
-    <div className="space-y-3">
-      {pollState.options.map((option) => {
-        const percentage = pollState.totalVotes > 0 
-          ? Math.round((option.voteCount / pollState.totalVotes) * 100) 
-          : 0;
-        const isUserVote = option.voted;
-        
-        return (
-          <div key={option.id} className="space-y-1">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">
-                {option.text}
-                {isUserVote && (
-                  <span className="ml-2 text-xs text-primary">✓ Your vote</span>
-                )}
-              </span>
-              <span className="text-xs text-muted-foreground">
-                {percentage}% • {option.voteCount} vote{option.voteCount !== 1 ? 's' : ''}
-              </span>
+          <div className="mb-4 border border-border rounded-lg p-4">
+            <h4 className="font-medium text-foreground mb-3">{pollState.question}</h4>
+            <div className="space-y-3">
+              {pollState.options.map((option) => {
+                const percentage = pollState.totalVotes > 0
+                  ? Math.round((option.voteCount / pollState.totalVotes) * 100)
+                  : 0;
+                const isUserVote = option.voted;
+
+                return (
+                  <div key={option.id} className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">
+                        {option.text}
+                        {isUserVote && (
+                          <span className="ml-2 text-xs text-primary">✓ Your vote</span>
+                        )}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {percentage}% • {option.voteCount} vote{option.voteCount !== 1 ? 's' : ''}
+                      </span>
+                    </div>
+                    <div
+                      className={`h-2 rounded-full overflow-hidden ${isUserVote ? 'bg-primary/20' : 'bg-muted'
+                        }`}
+                    >
+                      <div
+                        className={`h-full ${isUserVote ? 'bg-primary' : 'bg-muted-foreground/30'
+                          }`}
+                        style={{ width: `${percentage}%` }}
+                      />
+                    </div>
+                    <div className="flex justify-end">
+                      <button
+                        onClick={() => handleVote(option.id)}
+                        disabled={isLoading}
+                        className={`text-xs px-3 py-1 rounded-full border ${isUserVote
+                            ? 'border-primary bg-primary/10 text-primary'
+                            : 'border-border hover:bg-muted/50'
+                          } transition-colors disabled:opacity-50`}
+                      >
+                        {isUserVote ? 'Voted' : 'Vote'}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-            <div 
-              className={`h-2 rounded-full overflow-hidden ${
-                isUserVote ? 'bg-primary/20' : 'bg-muted'
-              }`}
-            >
-              <div 
-                className={`h-full ${
-                  isUserVote ? 'bg-primary' : 'bg-muted-foreground/30'
-                }`}
-                style={{ width: `${percentage}%` }}
-              />
-            </div>
-            <div className="flex justify-end">
-              <button
-                onClick={() => handleVote(option.id)}
-                disabled={isLoading}
-                className={`text-xs px-3 py-1 rounded-full border ${
-                  isUserVote 
-                    ? 'border-primary bg-primary/10 text-primary' 
-                    : 'border-border hover:bg-muted/50'
-                } transition-colors disabled:opacity-50`}
-              >
-                {isUserVote ? 'Voted' : 'Vote'}
-              </button>
+            <div className="mt-3 text-xs text-muted-foreground flex justify-between items-center">
+              <span>
+                {pollState.totalVotes} vote{pollState.totalVotes !== 1 ? 's' : ''}
+              </span>
+              {pollState.endsAt && (
+                <span>
+                  {pollState.isExpired
+                    ? 'Poll ended'
+                    : `Ends in ${formatDistanceToNow(pollState.endsAt, { addSuffix: true })}`}
+                </span>
+              )}
             </div>
           </div>
-        );
-      })}
-    </div>
-    <div className="mt-3 text-xs text-muted-foreground flex justify-between items-center">
-      <span>
-        {pollState.totalVotes} vote{pollState.totalVotes !== 1 ? 's' : ''}
-      </span>
-      {pollState.endsAt && (
-        <span>
-          {pollState.isExpired 
-            ? 'Poll ended'
-            : `Ends in ${formatDistanceToNow(pollState.endsAt, { addSuffix: true })}`}
-        </span>
-      )}
-    </div>
-  </div>
-)}
+        )}
 
         {/* External Link */}
-        {post.link && (
-          <a 
-            href={post.link}
+        {post.url && (
+          <a
+            href={post.url}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center space-x-2 p-3 border border-border rounded-lg hover:bg-muted/50 transition-colors duration-200 mb-4 group"
           >
             <ExternalLink className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
             <span className="text-sm text-primary group-hover:text-primary/90 transition-colors">
-              {new URL(post.link).hostname}
+              {new URL(post.url).hostname}
             </span>
           </a>
         )}
@@ -371,14 +379,14 @@ export const PostCard: React.FC<PostCardProps> = ({ post, onBookmarkToggle }) =>
         {/* Actions */}
         <div className="flex items-center justify-between pt-2 border-t border-border/20">
           <div className="flex items-center space-x-3">
-            <VotingSystem 
-              initialVotes={post.votesCount} 
+            <VotingSystem
+              initialVotes={post.votesCount}
               postId={post.id}
               orientation="horizontal"
               size="md"
             />
-            
-            <button 
+
+            <button
               className="flex items-center space-x-1.5 px-2 py-1 rounded hover:bg-muted/20 transition-colors duration-150 text-muted-foreground hover:text-foreground text-sm"
               onClick={handleCommentClick}
             >
@@ -386,7 +394,7 @@ export const PostCard: React.FC<PostCardProps> = ({ post, onBookmarkToggle }) =>
               <span className="text-xs font-medium">{post.commentsCount}</span>
             </button>
 
-            <button 
+            <button
               onClick={handleShare}
               className="flex items-center space-x-1.5 px-2 py-1 rounded hover:bg-muted/20 transition-colors duration-150 text-muted-foreground hover:text-foreground text-sm"
             >
@@ -394,28 +402,27 @@ export const PostCard: React.FC<PostCardProps> = ({ post, onBookmarkToggle }) =>
               <span className="text-xs font-medium">Share</span>
             </button>
 
-            <button 
+            <button
               onClick={handleBookmark}
-              className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-md transition-colors duration-200 ${
-                isBookmarked 
-                  ? 'text-primary hover:bg-primary/5' 
+              className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-md transition-colors duration-200 ${isBookmarked
+                  ? 'text-primary hover:bg-primary/5'
                   : 'text-muted-foreground hover:bg-muted/30 hover:text-foreground'
-              }`}
+                }`}
             >
               <Bookmark className={`h-4 w-4 ${isBookmarked ? 'fill-current' : ''}`} />
               <span className="text-xs font-medium">{isBookmarked ? 'Saved' : 'Save'}</span>
             </button>
           </div>
 
-          <button 
+          <button
             className="p-1.5 rounded-md hover:bg-muted/30 transition-colors duration-200 text-muted-foreground hover:text-foreground"
             aria-label="More options"
           >
             <MoreHorizontal className="h-4 w-4" />
           </button>
         </div>
-        
-         
+
+
       </div>
     </article>
   );

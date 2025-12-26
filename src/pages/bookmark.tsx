@@ -10,7 +10,13 @@ interface ApiResponse<T> {
   data: T;
   message?: string;
 }
-
+interface Bookmark{
+  id:number;
+  userId:number;
+  postId:number;
+  post:Post;
+  createdAt:Date;
+}
 export default function BookmarkPage() {
   const [bookmarkedPosts, setBookmarkedPosts] = useState<Post[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -18,13 +24,13 @@ export default function BookmarkPage() {
   useEffect(() => {
     const fetchBookmarkedPosts = async () => {
       try {
-        const response = await api.get<ApiResponse<Post[]>>('/bookmark/profile/bookmarks');
-        const responseData = response as unknown as ApiResponse<Post[]>;
+        const response = await api.get<ApiResponse<Bookmark[]>>('/bookmark/profile/bookmarks');
+        const responseData = response as unknown as ApiResponse<Bookmark[]>;
         
         if (responseData.success) {
           // Mark all posts as bookmarked since they come from the bookmarks endpoint
-          const postsWithBookmarkFlag = responseData.data.map((post: Post) => ({
-            ...post,
+          const postsWithBookmarkFlag = responseData.data.map((post: Bookmark) => ({
+            ...post.post,
             isBookmarked: true
           }));
           setBookmarkedPosts(postsWithBookmarkFlag);

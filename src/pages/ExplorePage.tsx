@@ -3,28 +3,56 @@ import { Search, MessageSquare, Hash, Filter } from 'lucide-react';
 import PostCard from '@/components/posts/PostCard';
 import { api } from '@/api/route';
 import { Link } from 'react-router-dom';
+interface API{
+  success: boolean;
+  data: {
+    posts: Post[];
+  };
+}
 interface Post {
   id: string;
   title: string;
   content: string;
+  type: 'TEXT' | 'IMAGE' | 'LINK' | 'POLL';
   author: string;
   authorId: string;
-  community: string;
+  community: Community;
   communityIcon: string;
-  createdAt: string;
+  createdAt: Date;
   votesCount: number;
   commentsCount: number;
   imageUrl?: string;
-  link?: string;
+  url?: string;
+  isBookmarked?: boolean;
+  poll?: {
+    id: string;
+    question: string;
+    options: Array<{
+      id: string;
+      text: string;
+      voteCount: number;
+      voted: boolean;
+    }>;
+    totalVotes: number;
+    hasVoted: boolean;
+    endsAt?: Date;
+    isExpired: boolean;
+    pollOptionId?: string;
+  };
 }
-
 interface Community {
-  id: string;
+  id: number;
   name: string;
-  description: string;
-  icon: string;
-  members: number;
-  isJoined: boolean;
+  displayName: string,
+  description: string,
+  iconUrl: string,
+  bannerUrl: string,
+  type: string,
+  nsfw: boolean,
+  createdAt: Date,
+  updatedAt: Date,
+  isJoined: boolean,
+  ownerId: number;
 }
 
 const ExplorePage = () => {
@@ -37,12 +65,13 @@ const ExplorePage = () => {
     communities: true,
   });
   const [error, setError] = useState<string | null>(null);
+  const [showFilters, setShowFilters] = useState(false);
 
   const fetchPosts = useCallback(async () => {
     try {
-      const response = await api.get<{ success: boolean; data: Post[] }>('/posts');
+      const response = await api.get<API>('/posts');
       if (response.success) {
-        setPosts(response.data);
+        setPosts(response.data.posts);
       }
     } catch (err) {
       setError('Failed to fetch posts');
@@ -74,7 +103,7 @@ const ExplorePage = () => {
   const filteredPosts = posts.filter(post =>
     post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     post.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    post.community.toLowerCase().includes(searchQuery.toLowerCase())
+    post.community.displayName.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const filteredCommunities = communities.filter(community =>
@@ -108,18 +137,6 @@ const ExplorePage = () => {
         </div>
       </div>
 
-      {/* Search Bar */}
-      <div className="relative mb-6">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-        <input
-          type="text"
-          placeholder="Search posts, communities, and users..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="form-input pl-10 pr-4 text-lg h-12"
-        />
-      </div>
-
       {/* Tab Navigation */}
       <div className="flex space-x-1 mb-6 p-1 bg-muted rounded-lg w-fit">
         <button
@@ -143,6 +160,19 @@ const ExplorePage = () => {
 
         </button>
       </div>
+
+      {/* Error Message */}
+      {error && (
+        <div className="bg-destructive/10 border border-destructive/30 text-destructive p-4 rounded-lg mb-6">
+          {error}
+          <button 
+            onClick={() => setError(null)} 
+            className="float-right text-sm font-medium hover:underline"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
 
       {/* Results */}
       <div className="space-y-4">
@@ -193,7 +223,7 @@ const ExplorePage = () => {
                   <div key={community.id} className="p-4 border rounded-lg hover:shadow-md transition-shadow">
                     <div className="flex items-start space-x-3">
                       <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
-                        {community.icon || <Hash className="h-5 w-5 text-muted-foreground" />}
+                        {community.iconUrl || <Hash className="h-5 w-5 text-muted-foreground" />}
                       </div>
                       <div className="flex-1">
                         <Link to={`/r/${community.id}`} className="font-semibold text-lg hover:underline">
