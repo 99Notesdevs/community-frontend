@@ -100,15 +100,15 @@ const ExplorePage = () => {
     fetchCommunities();
   }, [fetchPosts, fetchCommunities]);
 
-  const filteredPosts = posts.filter(post =>
-    post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    post.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    post.community.displayName.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredPosts = (posts || []).filter(post =>
+    (post?.title?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+    (post?.content?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+    (post?.community?.displayName?.toLowerCase() || '').includes(searchQuery.toLowerCase())
   );
 
-  const filteredCommunities = communities.filter(community =>
-    community.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (community.description?.toLowerCase() || '').includes(searchQuery.toLowerCase())
+  const filteredCommunities = (communities || []).filter(community =>
+    (community?.name?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+    (community?.description?.toLowerCase() || '').includes(searchQuery.toLowerCase())
   );
 
   return (

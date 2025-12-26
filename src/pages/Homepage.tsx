@@ -118,20 +118,43 @@ const Homepage = () => {
 
   const fetchPosts = useCallback(async () => {
     try {
-      const response = await api.get<API>('/posts');
-      if (response.success) {
-        return response.data.posts.map((post: any) => ({
-          ...post,
-          votes: post.votesCount,
-          comments: post.commentsCount,
-          author: post.authorId?.toString() || 'Anonymous',
-          community: post.community || 'Community',
-          communityIcon: post.communityIcon || '',
-          createdAt: new Date(post.createdAt),
-          isBookmarked: bookmarkedPostIdsRef.current.has(post.id.toString())
-        }));
+      console.log('Fetching posts from API...');
+      const response = await api.get<{ success: boolean; data: any[] }>('/posts');
+      console.log('Posts API response:', response);
+      
+      // Handle the response structure where posts are in response.data
+      const postsData = response.success && Array.isArray(response.data) 
+        ? response.data 
+        : [];
+      
+      if (!postsData.length) {
+        console.log('No posts data received');
+        return [];
       }
-      return [];
+      
+      return postsData.map((post: any) => ({
+        ...post,
+        id: post.id?.toString(),
+        votes: post.votesCount || post.votes || 0,
+        comments: post.commentsCount || post.comments || 0,
+        author: post.authorId?.toString() || post.author || 'Anonymous',
+        community: post.community || { 
+          id: post.communityId || 0,
+          name: 'community',
+          displayName: 'Community',
+          description: '',
+          iconUrl: '',
+          bannerUrl: '',
+          type: 'public',
+          nsfw: false,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          ownerId: 0
+        },
+        communityIcon: post.communityIcon || '',
+        createdAt: post.createdAt ? new Date(post.createdAt) : new Date(),
+        isBookmarked: bookmarkedPostIdsRef.current.has(post.id?.toString() || '')
+      }));
     } catch (err) {
       console.error('Error fetching posts:', err);
       return [];
