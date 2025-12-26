@@ -2,34 +2,57 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { api } from '../api/route';
 import PostCard from '@/components/posts/PostCard';
-
+interface API{
+  success: boolean;
+  data: {
+    posts: Post[];
+  };
+}
 interface Post {
   id: string;
   title: string;
   content: string;
+  type: 'TEXT' | 'IMAGE' | 'LINK' | 'POLL';
   author: string;
   authorId: string;
-  community: string;
+  community: Community;
   communityIcon: string;
   createdAt: Date;
   votesCount: number;
   commentsCount: number;
   imageUrl?: string;
-  link?: string;
+  url?: string;
   isBookmarked?: boolean;
+  poll?: {
+    id: string;
+    question: string;
+    options: Array<{
+      id: string;
+      text: string;
+      voteCount: number;
+      voted: boolean;
+    }>;
+    totalVotes: number;
+    hasVoted: boolean;
+    endsAt?: Date;
+    isExpired: boolean;
+    pollOptionId?: string;
+  };
 }
-
 interface Community {
   id: number;
   name: string;
-  banner: string;
-  icon: string;
-  description: string;
-  members: number;
-  online: number;
-  rules: string[];
+  displayName: string,
+  description: string,
+  rules: string[],
+  iconUrl: string,
+  bannerUrl: string,
+  type: string,
+  nsfw: boolean,
+  createdAt: Date,
+  updatedAt: Date,
+  ownerId: number;
 }
-
 export default function CommunityPage() {
   const { id } = useParams<{ id: string }>();
   const [community, setCommunity] = useState<Community | null>(null);
@@ -45,7 +68,7 @@ export default function CommunityPage() {
         // Fetch community details and posts in parallel
         const [communityRes, postsRes] = await Promise.all([
           api.get<{ success: boolean; data: Community }>(`/communities/${id}`),
-          api.get<{ success: boolean; data: Post[] }>(`/communities/${id}/posts`)
+          api.get<API>(`/communities/${id}/posts`)
         ]);
 
         if (communityRes.success) {
@@ -54,13 +77,13 @@ export default function CommunityPage() {
         
         if (postsRes.success) {
           // Transform posts to match the PostCard's expected format
-          const formattedPosts = postsRes.data.map(post => ({
+          const formattedPosts = postsRes.data.posts.map(post => ({
             ...post,
             id: String(post.id), // Ensure ID is a string
             votesCount: post.votesCount || 0,
             commentsCount: post.commentsCount || 0,
-            community: communityRes.data?.name || '',
-            communityIcon: communityRes.data?.icon || '',
+            
+            community: communityRes.data,
             createdAt: new Date() // You might want to get this from the API
           }));
           setPosts(formattedPosts);
@@ -88,7 +111,7 @@ export default function CommunityPage() {
           <div className="relative overflow-visible rounded-md shadow-sm">
             <div className="aspect-w-16 aspect-h-6 bg-muted rounded-t-md overflow-hidden">
               <img 
-                src={community.banner} 
+                src={community.bannerUrl} 
                 alt="Community Banner" 
                 className="w-full h-40 sm:h-48 object-cover"
                 onError={(e) => {
@@ -100,7 +123,7 @@ export default function CommunityPage() {
             <div className="relative z-10 px-4 sm:px-6 -mt-8 flex items-end space-x-3">
               <div className="w-16 h-16 sm:w-20 sm:h-20 bg-card p-0.5 rounded-full shadow-md border-2 border-border overflow-hidden">
                 <img 
-                  src={community.icon} 
+                  src={community.iconUrl} 
                   alt="Community Icon" 
                   className="w-full h-full object-cover"
                   onError={(e) => {
@@ -112,8 +135,8 @@ export default function CommunityPage() {
               <div className="bg-card/90 backdrop-blur-sm px-4 py-2 rounded-md shadow-sm border border-border mb-2">
                 <h1 className="text-xl font-semibold text-foreground">{community.name}</h1>
                 <p className="text-xs text-muted-foreground">
-                  <span className="font-medium">{community.members?.toLocaleString() || '0'}</span> members • 
-                  <span className="text-green-500 dark:text-green-400 font-medium"> {community.online || '0'} online</span>
+                  <span className="font-medium">{'0'}</span> members • 
+                  <span className="text-green-500 dark:text-green-400 font-medium"> {'0'} online</span>
                 </p>
               </div>
             </div>
@@ -144,10 +167,10 @@ export default function CommunityPage() {
               {/* About Card */}
               <div className="bg-card border rounded-lg overflow-hidden">
                 <div className="bg-muted/50 px-4 py-3 border-b">
-                  <h3 className="font-medium text-foreground">About</h3>
+                  <h3 className="font-medium text-foreground">About Community</h3>
                 </div>
-                <div className="p-4 break-words overflow-hidden">
-                  <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                <div className="p-4">
+                  <p className="text-sm text-muted-foreground leading-relaxed">
                     {community.description || 'No description available'}
                   </p>
                 </div>

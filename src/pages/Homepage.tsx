@@ -4,32 +4,93 @@ import PostCard from '@/components/posts/PostCard';
 import { TrendingUp, Star, Bookmark } from 'lucide-react';
 import { api } from '@/api/route';
 import { useAuth } from '@/contexts/AuthContext';
-
+interface API{
+  success: boolean;
+  data: {
+    posts: Post[];
+  };
+}
 interface Post {
   id: string;
   title: string;
   content: string;
+  type: 'TEXT' | 'IMAGE' | 'LINK' | 'POLL';
   author: string;
   authorId: string;
-  community: string;
+  community: Community;
   communityIcon: string;
   createdAt: Date;
   votesCount: number;
   commentsCount: number;
   imageUrl?: string;
-  link?: string;
+  url?: string;
   isBookmarked?: boolean;
-  [key: string]: any; // for other properties we might not use directly
+  poll?: {
+    id: string;
+    question: string;
+    options: Array<{
+      id: string;
+      text: string;
+      voteCount: number;
+      voted: boolean;
+    }>;
+    totalVotes: number;
+    hasVoted: boolean;
+    endsAt?: Date;
+    isExpired: boolean;
+    pollOptionId?: string;
+  };
 }
-
+interface Community {
+  id: number;
+  name: string;
+  displayName: string,
+  description: string,
+  iconUrl: string,
+  bannerUrl: string,
+  type: string,
+  nsfw: boolean,
+  createdAt: Date,
+  updatedAt: Date,
+  ownerId: number;
+}
 const Homepage = () => {
   const [activeTab, setActiveTab] = useState<'feed' | 'saved'>('feed');
-  const [sortBy, setSortBy] = useState<'hot' | 'new' | 'top'>('hot');
+  const [sortBy, setSortBy] = useState<'hot' | 'new' | 'top'>('new');
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { isAuthenticated } = useAuth();
   const bookmarkedPostIdsRef = useRef<Set<string>>(new Set());
+
+  const handleNewPost = useCallback((newPost: Post) => {
+    // Format the new post to match our existing post structure
+    const formattedPost: Post = {
+      ...newPost,
+      id: newPost.id.toString(),
+      author: newPost.authorId?.toString() || 'Anonymous',
+      community: newPost.community || {
+        id: 0,
+        name: 'default',
+        displayName: 'Default Community',
+        description: '',
+        iconUrl: '',
+        bannerUrl: '',
+        type: 'public',
+        nsfw: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        ownerId: 0
+      },
+      votesCount: newPost.votesCount || 0,
+      commentsCount: newPost.commentsCount || 0,
+      createdAt: new Date(newPost.createdAt),
+      isBookmarked: false
+    };
+
+    // Add the new post to the beginning of the posts array
+    setPosts(prevPosts => [formattedPost, ...prevPosts]);
+  }, []);
 
   const fetchBookmarks = useCallback(async () => {
     if (!isAuthenticated) {
@@ -41,7 +102,7 @@ const Homepage = () => {
       console.log('Fetching bookmarks...');
       const response = await api.get<{ success: boolean; data: Array<{ post: Post }> }>('/bookmark/profile/bookmarks');
       console.log('Bookmarks response:', response);
-      
+
       if (response.success && response.data) {
         const bookmarkedIds = new Set(response.data.map(bookmark => bookmark.post.id.toString()));
         console.log('Bookmarked post IDs:', bookmarkedIds);
@@ -57,15 +118,15 @@ const Homepage = () => {
 
   const fetchPosts = useCallback(async () => {
     try {
-      const response = await api.get<{ success: boolean; data: Post[] }>('/posts');
+      const response = await api.get<API>('/posts');
       if (response.success) {
-        return response.data.map((post: any) => ({
+        return response.data.posts.map((post: any) => ({
           ...post,
           votes: post.votesCount,
           comments: post.commentsCount,
           author: post.authorId?.toString() || 'Anonymous',
-          community: post.community?.name || 'Community',
-          communityIcon: post.community?.iconUrl || '',
+          community: post.community || 'Community',
+          communityIcon: post.communityIcon || '',
           createdAt: new Date(post.createdAt),
           isBookmarked: bookmarkedPostIdsRef.current.has(post.id.toString())
         }));
@@ -82,13 +143,13 @@ const Homepage = () => {
       try {
         setLoading(true);
         setError(null);
-        
+
         console.log('Loading data...');
-        
+
         // Always fetch posts
         const postsData = await fetchPosts();
         console.log('Fetched posts:', postsData.length);
-        
+
         // Only fetch bookmarks if authenticated
         let bookmarkedIds = new Set<string>();
         if (isAuthenticated) {
@@ -194,7 +255,7 @@ const Homepage = () => {
         <div className="bg-destructive/10 border border-destructive/30 text-destructive p-6 rounded-xl text-center">
           <h3 className="font-medium text-lg mb-2">Something went wrong</h3>
           <p className="text-sm mb-4">{error}</p>
-          <button 
+          <button
             onClick={() => window.location.reload()}
             className="px-4 py-2 bg-destructive text-destructive-foreground rounded-lg text-sm font-medium hover:bg-destructive/90 transition-colors"
           >
@@ -208,15 +269,15 @@ const Homepage = () => {
   return (
     <div className="max-w-4xl mx-auto px-4 py-6">
       <div className="mb-6">
-        <PostCreationBar />
+        <PostCreationBar onPostCreated={handleNewPost} />
       </div>
 
       <div className="space-y-3">
         {sortedPosts.length > 0 ? (
           <div className="space-y-3">
             {sortedPosts.map((post) => (
-              <div 
-                key={post.id} 
+              <div
+                key={post.id}
                 className="bg-card border border-border/50 hover:border-border transition-colors duration-200"
               >
                 <PostCard post={post} />
@@ -229,17 +290,17 @@ const Homepage = () => {
               {activeTab === 'saved' ? (
                 <Bookmark className="h-6 w-6 text-muted-foreground" />
               ) : (
-                <svg 
-                  className="h-6 w-6 text-muted-foreground" 
-                  fill="none" 
-                  viewBox="0 0 24 24" 
+                <svg
+                  className="h-6 w-6 text-muted-foreground"
+                  fill="none"
+                  viewBox="0 0 24 24"
                   stroke="currentColor"
                 >
-                  <path 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round" 
-                    strokeWidth="2" 
-                    d="M12 4v16m8-8H4" 
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M12 4v16m8-8H4"
                   />
                 </svg>
               )}

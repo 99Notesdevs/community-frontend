@@ -10,7 +10,13 @@ interface ApiResponse<T> {
   data: T;
   message?: string;
 }
-
+interface Bookmark{
+  id:number;
+  userId:number;
+  postId:number;
+  post:Post;
+  createdAt:Date;
+}
 export default function BookmarkPage() {
   const [bookmarkedPosts, setBookmarkedPosts] = useState<Post[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -18,35 +24,16 @@ export default function BookmarkPage() {
   useEffect(() => {
     const fetchBookmarkedPosts = async () => {
       try {
-        const response = await api.get('/bookmark/profile/bookmarks');
-        const responseData = response as unknown as ApiResponse<Array<{ post: any }>>;
-
+        const response = await api.get<ApiResponse<Bookmark[]>>('/bookmark/profile/bookmarks');
+        const responseData = response as unknown as ApiResponse<Bookmark[]>;
+        
         if (responseData.success) {
-          // Transform the bookmarked posts to match the Post interface
-          const transformedPosts = responseData.data.map(item => {
-            const post = item.post;
-            return {
-              id: post.id,
-              title: post.title,
-              content: post.content,
-              type: post.type || 'TEXT',
-              author: post.author?.username || 'Anonymous',
-              authorId: post.authorId?.toString() || '0',
-              community: post.community?.name || 'Community',
-              communityIcon: post.community?.iconUrl || '',
-              createdAt: new Date(post.createdAt),
-              votesCount: post.votesCount || 0,
-              commentsCount: post.commentsCount || 0,
-              imageUrl: post.imageUrl,
-              link: post.link,
-              isBookmarked: true,
-              votes: post.votesCount || 0,
-              comments: post.commentsCount || 0,
-              ...(post.poll && { poll: post.poll })
-            };
-          });
-
-          setBookmarkedPosts(transformedPosts);
+          // Mark all posts as bookmarked since they come from the bookmarks endpoint
+          const postsWithBookmarkFlag = responseData.data.map((post: Bookmark) => ({
+            ...post.post,
+            isBookmarked: true
+          }));
+          setBookmarkedPosts(postsWithBookmarkFlag);
         } else {
           toast.error('Failed to load bookmarked posts');
         }
@@ -89,7 +76,7 @@ export default function BookmarkPage() {
 
   return (
     <div className="max-w-4xl mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-6">Bookmarks</h1>
+      <h1 className="text-2xl font-bold mb-6">Your Bookmarked Posts</h1>
       
       {bookmarkedPosts.length === 0 ? (
         <div className="text-center py-12">

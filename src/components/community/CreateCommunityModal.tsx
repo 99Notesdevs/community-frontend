@@ -28,12 +28,42 @@ export function CreateCommunityModal({ isOpen, onClose }: { isOpen: boolean; onC
     nsfw: false,
     rules: [{ title: '', description: '' }] as CommunityRule[],
   });
+  
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const validateStep = () => {
+    const newErrors: Record<string, string> = {};
+    
+    if (currentStep === 1) {
+      if (!formData.name.trim()) {
+        newErrors.name = 'Community name is required';
+      }
+      if (!formData.displayName.trim()) {
+        newErrors.displayName = 'Display name is required';
+      }
+      if (!formData.description.trim()) {
+        newErrors.description = 'Description is required';
+      }
+      
+      if (Object.keys(newErrors).length > 0) {
+        setErrors(newErrors);
+        return false;
+      }
+    }
+    
+    setErrors({});
+    return true;
+  };
 
   const handleNext = () => {
+    if (!validateStep()) {
+      return;
+    }
+    
     if (currentStep < 4) {
       setCurrentStep(currentStep + 1);
     } else {
-      const response=api.post('/communities', formData);
+      const response = api.post('/communities', formData);
       console.log('Submitting:', formData);
       onClose();
     }
@@ -108,12 +138,17 @@ export function CreateCommunityModal({ isOpen, onClose }: { isOpen: boolean; onC
                 value={formData.name}
                 onChange={handleInputChange}
                 placeholder="r/community_name"
-                className="mt-1.5 text-sm h-9 rounded-sm"
+                className="mt-1.5 text-sm h-9 rounded-sm border border-gray-300 focus:border-primary focus-visible:ring-1 focus-visible:ring-ring"
                 required
               />
               <p className="text-xs text-muted-foreground mt-1">
                 Community names including capitalization cannot be changed.
               </p>
+              {errors.name && (
+                <p id="name-error" className="text-sm text-destructive mt-1">
+                  {errors.name}
+                </p>
+              )}
             </div>
             
             <div>
@@ -124,9 +159,14 @@ export function CreateCommunityModal({ isOpen, onClose }: { isOpen: boolean; onC
                 value={formData.displayName}
                 onChange={handleInputChange}
                 placeholder="Community Name"
-                className="mt-1.5 text-sm h-9 rounded-sm"
+                className="mt-1.5 text-sm h-9 rounded-sm border border-gray-300 focus:border-primary focus-visible:ring-1 focus-visible:ring-ring"
                 required
               />
+              {errors.name && (
+                <p id="name-error" className="text-sm text-destructive mt-1">
+                  {errors.name}
+                </p>
+              )}
             </div>
 
             <div>
@@ -137,9 +177,14 @@ export function CreateCommunityModal({ isOpen, onClose }: { isOpen: boolean; onC
                 value={formData.description}
                 onChange={handleInputChange}
                 placeholder="What's your community about?"
-                className="mt-1.5 text-sm h-9 rounded-sm"
+                className="mt-1.5 text-sm h-9 rounded-sm border border-gray-300 focus:border-primary focus-visible:ring-1 focus-visible:ring-ring"
                 rows={3}
               />
+              {errors.description && (
+                <p id="description-error" className="text-sm text-destructive mt-1">
+                  {errors.description}
+                </p>
+              )}
             </div>
           </div>
         )}
@@ -168,10 +213,10 @@ export function CreateCommunityModal({ isOpen, onClose }: { isOpen: boolean; onC
                         setFormData(prev => ({ ...prev, iconUrl: url }));
                       }
                     }}
-                    className="hidden"
+                    className="hidden border border-gray-300 rounded-sm"
                     id="icon-upload"
                   />
-                  <Button variant="outline" size="sm" asChild className="rounded-sm">
+                  <Button variant="outline" size="sm" asChild className="rounded-sm border border-gray-300 bg-white">
                     <label htmlFor="icon-upload" className="cursor-pointer">
                       Upload Icon
                     </label>
@@ -204,10 +249,10 @@ export function CreateCommunityModal({ isOpen, onClose }: { isOpen: boolean; onC
                         setFormData(prev => ({ ...prev, bannerUrl: url }));
                       }
                     }}
-                    className="hidden"
+                    className="hidden border border-gray-300 rounded-sm"
                     id="banner-upload"
                   />
-                  <Button variant="outline" size="sm" asChild>
+                  <Button variant="outline" size="sm" asChild className="rounded-sm border border-gray-300 bg-white">
                     <label htmlFor="banner-upload" className="cursor-pointer">
                       Upload Banner
                     </label>
@@ -232,21 +277,21 @@ export function CreateCommunityModal({ isOpen, onClose }: { isOpen: boolean; onC
                 className="space-y-2"
               >
                 <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="PUBLIC" id="public" />
+                  <RadioGroupItem value="PUBLIC" id="public" className="border border-gray-300" />
                   <Label htmlFor="public" className="flex-1">
                     <div className="font-medium">Public</div>
                     <p className="text-sm text-muted-foreground">Anyone can view, post, and comment</p>
                   </Label>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="PRIVATE" id="private" />
+                  <RadioGroupItem value="PRIVATE" id="private" className="border border-gray-300" />
                   <Label htmlFor="private" className="flex-1">
                     <div className="font-medium">Private</div>
                     <p className="text-sm text-muted-foreground">Only approved users can view and participate</p>
                   </Label>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="RESTRICTED" id="restricted" />
+                  <RadioGroupItem value="RESTRICTED" id="restricted" className="border border-gray-300" />
                   <Label htmlFor="restricted" className="flex-1">
                     <div className="font-medium">Restricted</div>
                     <p className="text-sm text-muted-foreground">Anyone can view, but only approved users can post</p>
@@ -255,17 +300,20 @@ export function CreateCommunityModal({ isOpen, onClose }: { isOpen: boolean; onC
               </RadioGroup>
             </div>
 
-            <div className="flex items-center justify-between p-4 border rounded-md">
+            <div className="flex items-center justify-between p-4 border border-gray-300 rounded-md">
               <div>
                 <div className="font-medium">NSFW Content</div>
                 <p className="text-sm text-muted-foreground">
                   This community is for mature audiences only
                 </p>
               </div>
-              <Switch
-                checked={formData.nsfw}
-                onCheckedChange={(checked) => setFormData(prev => ({ ...prev, nsfw: checked }))}
-              />
+              
+                <Switch
+                  checked={formData.nsfw}
+                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, nsfw: checked }))}
+                  className="data-[state=unchecked]:bg-gray-100"
+                />
+              
             </div>
           </div>
         )}
@@ -278,7 +326,7 @@ export function CreateCommunityModal({ isOpen, onClose }: { isOpen: boolean; onC
             </p>
             
             {formData.rules.map((rule, index) => (
-              <div key={index} className="border rounded-md p-4 space-y-3">
+              <div key={index} className="border border-gray-300 rounded-md p-4 space-y-3">
                 <div className="flex justify-between items-center">
                   <h4 className="font-medium">Rule {index + 1}</h4>
                   {formData.rules.length > 1 && (
@@ -298,7 +346,7 @@ export function CreateCommunityModal({ isOpen, onClose }: { isOpen: boolean; onC
                     value={rule.title}
                     onChange={(e) => handleRuleChange(index, 'title', e.target.value)}
                     placeholder="e.g. No spam"
-                    className="mt-1.5 text-sm h-9 rounded-sm"
+                    className="mt-1.5 text-sm h-9 rounded-sm border border-gray-300 focus:border-primary focus-visible:ring-1 focus-visible:ring-ring"
                   />
                 </div>
                 <div>
@@ -307,7 +355,7 @@ export function CreateCommunityModal({ isOpen, onClose }: { isOpen: boolean; onC
                     value={rule.description}
                     onChange={(e) => handleRuleChange(index, 'description', e.target.value)}
                     placeholder="Detailed description of the rule"
-                    className="mt-1.5 text-sm h-9 rounded-sm"
+                    className="mt-1.5 text-sm h-9 rounded-sm border border-gray-300 focus:border-primary focus-visible:ring-1 focus-visible:ring-ring"
                     rows={2}
                   />
                 </div>
@@ -318,7 +366,7 @@ export function CreateCommunityModal({ isOpen, onClose }: { isOpen: boolean; onC
               variant="outline"
               size="sm"
               onClick={addRule}
-              className="w-full mt-2"
+              className="w-full mt-2 border border-gray-300 bg-white"
             >
               Add Another Rule
             </Button>
@@ -331,7 +379,7 @@ export function CreateCommunityModal({ isOpen, onClose }: { isOpen: boolean; onC
             size="sm"
             onClick={handlePrev}
             disabled={currentStep === 1}
-            className="rounded-sm"
+            className="rounded-sm border border-gray-300 bg-white"
           >
             Back
           </Button>
