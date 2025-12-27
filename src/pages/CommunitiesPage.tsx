@@ -16,6 +16,7 @@ interface Community {
   iconUrl: string;
   bannerUrl: string;
   nsfw: boolean;
+  membersCount: number;
   createdAt: string;
   updatedAt: string;
   ownerId: number;

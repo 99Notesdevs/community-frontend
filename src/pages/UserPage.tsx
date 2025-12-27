@@ -42,15 +42,45 @@ interface Post {
   id: string;
   title: string;
   content: string;
+  type: 'TEXT' | 'IMAGE' | 'LINK' | 'POLL';
+  author: string;
+  authorId: string;
+  community: Community;
+  communityIcon: string;
+  createdAt: Date;
   votesCount: number;
   commentsCount: number;
-  authorId: string;
-  communityId: string;
-  communityName: string;
-  communityIcon: string;
-  createdAt: string;
-  updatedAt: string;
+  imageUrl?: string;
+  url?: string;
   isBookmarked?: boolean;
+  poll?: {
+    id: string;
+    question: string;
+    options: Array<{
+      id: string;
+      text: string;
+      voteCount: number;
+      voted: boolean;
+    }>;
+    totalVotes: number;
+    hasVoted: boolean;
+    endsAt?: Date;
+    isExpired: boolean;
+    pollOptionId?: string;
+  };
+}
+interface Community {
+  id: number;
+  name: string;
+  displayName: string,
+  description: string,
+  iconUrl: string,
+  bannerUrl: string,
+  type: string,
+  nsfw: boolean,
+  createdAt: Date,
+  updatedAt: Date,
+  ownerId: number;
 }
 
 interface Comment {
@@ -89,42 +119,60 @@ export default function UserPage() {
 
   useEffect(() => {
     const fetchData = async () => {
-      if (!id) {
-        setError('User ID is required');
-        setLoading(false);
-        return;
-      }
+  if (!id) {
+    setError('User ID is required');
+    setLoading(false);
+    return;
+  }
 
-      try {
-        setLoading(true);
-        setError(null);
-        
-        // Fetch user details, posts, and comments in parallel
-        const [commentsRes, postsRes] = await Promise.all([
-          api.get<ApiResponse<Comment[]>>(`/profile/profile-comments/?userId=${id}&skip=0&take=10`),
-          api.get<ApiResponse<Post[]>>(`/profile/profile-posts/?userId=${id}&skip=0&take=10`)
-        ]) as [ApiResponse<Comment[]>, ApiResponse<Post[]>];
-        
+  try {
+    setLoading(true);
+    setError(null);
+    
+    // Fetch user details, posts, and comments in parallel
+    const [postsRes] = await Promise.all([
+      api.get<ApiResponse<Post[]>>(`/posts/${id}?skip=0&take=10`)
+    ]);
 
-        if (postsRes.success) {
-          setPosts(postsRes.data.map((post: any) => ({
-            ...post,
-            communityName: 'Community', // You might want to fetch the actual community name
-            communityIcon: ''
-          })));
-        }
+    console.log('Posts API response:', postsRes);
 
-        if (commentsRes.success) {
-          setComments(commentsRes.data);
-        }
-      } catch (err) {
-        console.error('Error fetching user data:', err);
-        setError('Failed to load user data. Please try again later.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
+    if (postsRes?.success && Array.isArray(postsRes.data)) {
+      const formattedPosts = postsRes.data.map((post: any) => ({
+        ...post,
+        id: post.id?.toString(),
+        votesCount: post.votesCount || 0,
+        commentsCount: post.commentsCount || 0,
+        author: post.authorId?.toString() || 'Anonymous',
+        community: post.community || {
+          id: post.communityId || 0,
+          name: 'community',
+          displayName: 'Community',
+          description: '',
+          iconUrl: '',
+          bannerUrl: '',
+          type: 'public',
+          nsfw: false,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          ownerId: 0
+        },
+        communityIcon: post.communityIcon || '',
+        createdAt: post.createdAt ? new Date(post.createdAt) : new Date(),
+        isBookmarked: false
+      }));
+      setPosts(formattedPosts);
+    } else {
+      console.error('Unexpected posts response format:', postsRes);
+      setPosts([]);
+    }
+  } catch (err) {
+    console.error('Error fetching user data:', err);
+    const errorMessage = err.response?.data?.message || err.message || 'Failed to load user data';
+    setError(errorMessage);
+  } finally {
+    setLoading(false);
+  }
+};
     fetchData();
   }, [id]);
 
@@ -288,9 +336,9 @@ export default function UserPage() {
                         post={{
                           id: post.id.toString(),
                           votesCount: post.votesCount || 0,
+                          type:post.type,
                           commentsCount: post.commentsCount || 0,
-                          community: post.communityName || 'Community',
-                          communityIcon: post.communityIcon || '',
+                          community: post.community,
                           author: post.authorId?.toString() || 'Unknown',
                           authorId: post.authorId?.toString() || '',
                           createdAt: new Date(post.createdAt),

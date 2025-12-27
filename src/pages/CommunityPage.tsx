@@ -120,11 +120,6 @@ export default function CommunityPage() {
                 src={community.bannerUrl} 
                 alt="Community Banner" 
                 className="w-full h-40 sm:h-48 object-cover"
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;                  
-                  target.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDEyMDAgMzAwIiBmaWxsPSIjZjNmNGY2Ij48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1JSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjI0IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBhbGlnbm1lbnQtYmFzZWxpbmU9Im1pZGRsZSIgZmlsbD0jOWNhM2FmIiBmb250LXdlaWdodD0iYm9sZCI+Q29tbXVuaXR5IEJhbm5lcjwvdGV4dD48L3N2Zz4=';
-                  target.onerror = null;
-                }}
               />
             </div>
             <div className="relative z-10 px-4 sm:px-6 -mt-8 flex items-end space-x-3">
@@ -133,12 +128,6 @@ export default function CommunityPage() {
                   src={community.iconUrl} 
                   alt="Community Icon" 
                   className="w-full h-full object-cover"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;                    
-                    const initial = community.name.charAt(0).toUpperCase();
-                    target.src = `data:image/svg+xml;base64,${btoa(`<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50" fill="#3b82f6"/><text x="50%" y="55%" text-anchor="middle" fill="white" font-family="Arial" font-size="50" font-weight="bold" dy=".3em">${initial}</text></svg>`)}`;
-                    target.onerror = null;
-                  }}
                 />
               </div>
               <div className="bg-card/90 backdrop-blur-sm px-4 py-2 rounded-md shadow-sm border border-border mb-2">
