@@ -25,6 +25,7 @@ interface Post {
   imageUrl?: string;
   url?: string;
   isBookmarked?: boolean;
+  currentUserVoteType:"UPVOTE"|"DOWNVOTE"|null,
   poll?: {
     id: string;
     question: string;

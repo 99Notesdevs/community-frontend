@@ -10,6 +10,8 @@ interface VotingSystemProps {
   orientation?: 'vertical' | 'horizontal';
   size?: 'sm' | 'md' | 'lg';
   onVote?: (newVote: 'up' | 'down' | null) => void;
+  currentUserVoteType?: 'UPVOTE' | 'DOWNVOTE' | null;
+
 }
 
 const VotingSystem = ({ 
@@ -18,10 +20,15 @@ const VotingSystem = ({
   commentId,
   orientation = 'vertical',
   size = 'md',
-  onVote
+  onVote,
+  currentUserVoteType
 }: VotingSystemProps) => {
   const [votes, setVotes] = useState(initialVotes);
-  const [userVote, setUserVote] = useState<'up' | 'down' | null>(null);
+   const [userVote, setUserVote] = useState<'up' | 'down' | null>(
+    currentUserVoteType === 'UPVOTE' ? 'up' : 
+    currentUserVoteType === 'DOWNVOTE' ? 'down' : 
+    null
+  );
   const [isLoading, setIsLoading] = useState(false);
 
   const handleVote = async (type: 'up' | 'down') => {
