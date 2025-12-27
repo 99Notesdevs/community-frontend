@@ -301,6 +301,7 @@ export const MessagesPage: React.FC = () => {
   };
 
   const handleSendMessage = (e: React.FormEvent) => {
+    console.log("handle message triggered");
     e.preventDefault();
     if (!newMessage.trim() || !selectedConversation || !socket || !user) return;
 

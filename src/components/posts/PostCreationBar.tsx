@@ -10,6 +10,10 @@ import { compressFile, uploadImageToS3 } from '@/config/imageUploadS3';
 
 type PostType = 'TEXT' | 'IMAGE' | 'LINK' | 'POLL';
 
+interface PostCreationBarProps {
+  onPostCreated?: (newPost: any) => void;
+}
+
 interface Community {
   id: number;
   name: string;
@@ -20,7 +24,7 @@ interface PollOption {
   text: string;
 }
 
-const PostCreationBar = () => {
+const PostCreationBar = ({ onPostCreated }: PostCreationBarProps) => {
   // Form state
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -98,10 +102,19 @@ const PostCreationBar = () => {
 
     try {
       setIsSubmitting(true);
-      const response = await api.post('/posts', payload) as { success: boolean };
+      const response = await api.post('/posts', payload) as { 
+        success: boolean; 
+        data: any;
+      };
       
       // Reset form on success
       if (response.success) {
+        // Call the callback with the new post data
+        if (onPostCreated && response.data) {
+          onPostCreated(response.data);
+        }
+        
+        // Reset form on success
         setTitle('');
         setContent('');
         setUrl('');

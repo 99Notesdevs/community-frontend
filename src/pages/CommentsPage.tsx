@@ -27,6 +27,20 @@ interface Poll {
   pollOptionId?: string;
 }
 
+interface Community {
+  id: number;
+  name: string;
+  displayName: string;
+  description: string;
+  iconUrl: string;
+  bannerUrl: string;
+  type: string;
+  nsfw: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  ownerId: number;
+}
+
 interface Post {
   id: string;
   title: string;
@@ -34,8 +48,7 @@ interface Post {
   type: 'TEXT' | 'IMAGE' | 'LINK' | 'POLL';
   author: string;
   authorId: string;
-  community: string;
-  communityIcon: string;
+  community: Community;
   createdAt: Date;
   votesCount: number;
   commentsCount: number;
@@ -44,6 +57,7 @@ interface Post {
   isBookmarked?: boolean;
   poll?: Poll;
 }
+
 interface Comment {
   id: number;
   content: string;
