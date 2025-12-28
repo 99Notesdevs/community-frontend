@@ -28,6 +28,7 @@ export interface Post {
   authorId: string;
   community: Community;
   createdAt: Date;
+  currentUserVoteType?: 'UPVOTE' | 'DOWNVOTE' | null;
   votesCount: number;
   commentsCount: number;
   imageUrl?: string;
@@ -385,6 +386,7 @@ export const PostCard: React.FC<PostCardProps> = ({ post, onBookmarkToggle }) =>
           <div className="flex items-center space-x-3">
             <VotingSystem
               initialVotes={post.votesCount}
+              currentUserVoteType={post.currentUserVoteType}
               postId={post.id}
               orientation="horizontal"
               size="md"

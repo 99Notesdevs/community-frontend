@@ -8,6 +8,7 @@ export const dummyPosts = [
     author: 'techguru_2024',
     community: 'r/webdev',
     communityIcon: '🌐',
+    
     createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
     votesCount: 1247,
     commentsCount: 89,

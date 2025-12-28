@@ -25,15 +25,46 @@ interface Post {
   id: string;
   title: string;
   content: string;
+  type: 'TEXT' | 'IMAGE' | 'LINK' | 'POLL';
+  author: string;
+  authorId: string;
+  community: Community;
+  communityIcon: string;
+  createdAt: Date;
   votesCount: number;
   commentsCount: number;
-  authorId: string;
-  communityId: string;
-  createdAt: string;
-  updatedAt: string;
+  imageUrl?: string;
+  url?: string;
   isBookmarked?: boolean;
+  poll?: {
+    id: string;
+    question: string;
+    options: Array<{
+      id: string;
+      text: string;
+      voteCount: number;
+      voted: boolean;
+    }>;
+    totalVotes: number;
+    hasVoted: boolean;
+    endsAt?: Date;
+    isExpired: boolean;
+    pollOptionId?: string;
+  };
 }
-
+interface Community {
+  id: number;
+  name: string;
+  displayName: string,
+  description: string,
+  iconUrl: string,
+  bannerUrl: string,
+  type: string,
+  nsfw: boolean,
+  createdAt: Date,
+  updatedAt: Date,
+  ownerId: number;
+}
 interface Comment {
   id: string;
   content: string;
@@ -76,7 +107,7 @@ const defaultUser: UserProfileData = {
 export default function UserProfile() {
   const [activeTab, setActiveTab] = useState<'posts' | 'comments'>('posts');
   const [posts, setPosts] = useState<Post[]>([]);
-  const [comments, setComments] = useState<Comment[]>([]);
+  // const [comments, setComments] = useState<Comment[]>([]);
   const [currentUser, setCurrentUser] = useState<UserProfileData>(defaultUser);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -98,41 +129,45 @@ export default function UserProfile() {
         setError(null);
         
         console.log('Making API calls...');
-        const [postsResponse, commentsResponse] = await Promise.all([
-          api.get<ApiResponse<Post[]>>(`/profile/profile-posts/?userId=${authUser.id}&skip=0&take=10`),
-          api.get<ApiResponse<Comment[]>>(`/profile/profile-comments/?userId=${authUser.id}&skip=0&take=10`),
-        ]) as [ApiResponse<Post[]>, ApiResponse<Comment[]>];
+        const [postsResponse] = await Promise.all([
+          api.get<ApiResponse<Post[]>>(`/posts/${authUser.id}?skip=0&take=10`)
+        ]);
 
-        console.log('API responses:', { postsResponse, commentsResponse });
+        console.log('API responses:', { postsResponse });
 
-        if (postsResponse.success) {
-          setPosts(postsResponse.data);
+        if (postsResponse?.success && Array.isArray(postsResponse.data)) {
+          const postsData = postsResponse.data;
+          setPosts(postsData);
+          
           // Calculate post karma (sum of votes)
-          const postKarma = postsResponse.data.reduce(
+          const postKarma = postsData.reduce(
             (sum: number, post: Post) => sum + (post.votesCount || 0), 0
           );
           
           setCurrentUser(prev => ({
             ...prev,
             postKarma,
-            karma: prev.karma + postKarma
+            karma: (prev?.karma || 0) + postKarma
           }));
+        } else {
+          console.error('Unexpected posts response format:', postsResponse);
+          setPosts([]);
         }
 
-        if (commentsResponse.success) {
-          setComments(commentsResponse.data);
-          // Calculate comment karma (sum of votes)
-          const commentKarma = commentsResponse.data.reduce(
-            (sum: number, comment: Comment) => sum + (comment.votesCount || 0), 0
-          );
+        // if (commentsResponse.success) {
+        //   setComments(commentsResponse.data);
+        //   // Calculate comment karma (sum of votes)
+        //   const commentKarma = commentsResponse.data.reduce(
+        //     (sum: number, comment: Comment) => sum + (comment.votesCount || 0), 0
+        //   );
           
-          setCurrentUser(prev => ({
-            ...prev,
-            commentKarma,
-            karma: prev.karma + commentKarma
-          }));
-        }
-      } catch (err: any) {
+        //   setCurrentUser(prev => ({
+        //     ...prev,
+        //     commentKarma,
+        //     karma: prev.karma + commentKarma
+        //   }));
+        // }
+        } catch (err) {
         console.error('Error fetching profile data:', err);
         const errorMessage = err.response?.data?.message || err.message || 'Failed to load profile data. Please try again later.';
         setError(errorMessage);
@@ -144,7 +179,7 @@ export default function UserProfile() {
     fetchData();
   }, [authUser?.id]);
 
-  console.log('Rendering UserProfile', { loading, error, currentUser, posts, comments });
+
 
   if (loading) return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   if (error) return <div className="flex items-center justify-center min-h-screen text-red-500">{error}</div>;
@@ -298,7 +333,7 @@ export default function UserProfile() {
                     Posts ({loading ? '...' : posts.length})
                   </span>
                 </button>
-                <button
+                {/* <button
                   onClick={() => setActiveTab('comments')}
                   className={`flex-1 px-6 py-3 font-medium text-sm transition-colors ${
                     activeTab === 'comments' 
@@ -310,7 +345,7 @@ export default function UserProfile() {
                     <MessageSquare size={16} />
                     Comments ({loading ? '...' : comments.length})
                   </span>
-                </button>
+                </button> */}
               </nav>
             </div>
             
@@ -327,10 +362,10 @@ export default function UserProfile() {
                           id: post.id,
                           title: post.title,
                           content: post.content,
+                          type: post.type,
                           author: currentUser.username,
                           authorId: post.authorId,
-                          community: '', // You might want to fetch the community name
-                          communityIcon: '', // You might want to fetch the community icon
+                          community: post.community,
                           createdAt: new Date(post.createdAt),
                           votesCount: post.votesCount,
                           commentsCount: post.commentsCount,
@@ -348,47 +383,47 @@ export default function UserProfile() {
 
               {/* Comments Tab */}
               {activeTab === 'comments' && (
-                <div className="space-y-4">
-                  {comments.length > 0 ? (
-                    comments.map((comment) => (
-                      <div key={comment.id} className="border-b border-gray-100 pb-4 last:border-0 last:pb-0">
-                        <div className="flex items-center text-xs text-gray-500 mb-1">
-                          <span>Comment on </span>
-                          <Link 
-                            to={`/post/${comment.postId}`} 
-                            className="ml-1 font-medium text-blue-600 hover:underline"
-                          >
-                            {comment.postTitle || 'a post'}
-                          </Link>
-                          <span className="mx-1">•</span>
-                          <span>{format(parseISO(comment.createdAt), 'MMM d, yyyy')}</span>
-                        </div>
-                        <p className="text-gray-800">{comment.content}</p>
-                        <div className="flex items-center mt-2 text-sm text-gray-500">
-                          <span className="flex items-center">
-                            <svg 
-                              xmlns="http://www.w3.org/2000/svg" 
-                              className="h-4 w-4 mr-1" 
-                              viewBox="0 0 20 20" 
-                              fill="currentColor"
-                            >
-                              <path 
-                                fillRule="evenodd" 
-                                d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" 
-                                clipRule="evenodd" 
-                              />
-                            </svg>
-                            {comment.votesCount}
-                          </span>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
+                // <div className="space-y-4">
+                //   {comments.length > 0 ? (
+                //     comments.map((comment) => (
+                //       <div key={comment.id} className="border-b border-gray-100 pb-4 last:border-0 last:pb-0">
+                //         <div className="flex items-center text-xs text-gray-500 mb-1">
+                //           <span>Comment on </span>
+                //           <Link 
+                //             to={`/post/${comment.postId}`} 
+                //             className="ml-1 font-medium text-blue-600 hover:underline"
+                //           >
+                //             {comment.postTitle || 'a post'}
+                //           </Link>
+                //           <span className="mx-1">•</span>
+                //           <span>{format(parseISO(comment.createdAt), 'MMM d, yyyy')}</span>
+                //         </div>
+                //         <p className="text-gray-800">{comment.content}</p>
+                //         <div className="flex items-center mt-2 text-sm text-gray-500">
+                //           <span className="flex items-center">
+                //             <svg 
+                //               xmlns="http://www.w3.org/2000/svg" 
+                //               className="h-4 w-4 mr-1" 
+                //               viewBox="0 0 20 20" 
+                //               fill="currentColor"
+                //             >
+                //               <path 
+                //                 fillRule="evenodd" 
+                //                 d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" 
+                //                 clipRule="evenodd" 
+                //               />
+                //             </svg>
+                //             {comment.votesCount}
+                //           </span>
+                //         </div>
+                //       </div>
+                //     ))
+                //   ) : (
                     <div className="text-center py-8 text-gray-500">
                       No comments found. Start the conversation!
                     </div>
-                  )}
-                </div>
+                //   )}
+                // </div>
               )}
             </div>
           </div>

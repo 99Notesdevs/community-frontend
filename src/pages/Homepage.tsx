@@ -25,6 +25,7 @@ interface Post {
   imageUrl?: string;
   url?: string;
   isBookmarked?: boolean;
+  currentUserVoteType:"UPVOTE"|"DOWNVOTE"|null,
   poll?: {
     id: string;
     question: string;
@@ -119,12 +120,12 @@ const Homepage = () => {
   const fetchPosts = useCallback(async () => {
     try {
       console.log('Fetching posts from API...');
-      const response = await api.get<{ success: boolean; data: any[] }>('/posts');
+      const response = await api.get<API>('/posts');
       console.log('Posts API response:', response);
       
       // Handle the response structure where posts are in response.data
-      const postsData = response.success && Array.isArray(response.data) 
-        ? response.data 
+      const postsData = response.success && Array.isArray(response.data.posts) 
+        ? response.data.posts 
         : [];
       
       if (!postsData.length) {
